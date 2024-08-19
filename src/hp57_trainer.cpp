@@ -96,7 +96,7 @@ void RenderImGuiItems()
 
     int modelsCount = maxEntityId / 4;
 
-    if (ImGui::CollapsingHeader("Models"))
+    if (ImGui::CollapsingHeader("DEBUG: Models"))
     {
         for (int i = 0; i < maxEntityId; i++)
         {
@@ -106,13 +106,19 @@ void RenderImGuiItems()
 
             char* entityLabel = (char*)entityLabelAddress;
 
-            if (std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos)
+            bool isLabelValid = std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos;
+
+            int unkEntityValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
+            bool isLoaded = unkEntityValue != 0;
+            const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
+
+            if (isLabelValid)
             {
-                ImGui::Text("%s", (char*)entityNameAddress, entityLabel);
+                ImGui::Text("%s (%i, %s)", (char*)entityNameAddress, i, loadedText);
             }
             else
             {
-                ImGui::Text("%s (%s)", (char*)entityNameAddress, entityLabel);
+                ImGui::Text("%s (%s, %i, %s)", (char*)entityNameAddress, entityLabel, i, loadedText);
             }
         }
     }
@@ -148,11 +154,6 @@ void RenderImGuiItems()
         if (ImGui::Button("Voldemort"))
         {
             SetPlayerEntityIndex(683);
-        }
-
-        if (ImGui::Button("Test"))
-        {
-            std::cout << getUnkEntityValue(*(uintptr_t*)worldAddress, 683, 0xE) << std::endl;
         }
     }
 }
