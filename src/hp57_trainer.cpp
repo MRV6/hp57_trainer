@@ -51,10 +51,7 @@ void MainThread(HMODULE hModule)
     AllocConsole();
     freopen_s(&f, "CONOUT$", "w", stdout);
 
-    //HWND window = FindWindow(0, L"LEGO® Harry Potter™ 2");
-
     LoadAddresses();
-
     InitImgui();
 
     std::cout << "Trainer ready" << std:: endl;
@@ -78,7 +75,7 @@ void MainThread(HMODULE hModule)
 
     CleanupImgui();
 
-    Sleep(1500); // Sleep before unloading DLL
+    Sleep(500); // Sleep before unloading DLL
     MessageBeep(MB_OK);
 
     fclose(f);
@@ -86,7 +83,7 @@ void MainThread(HMODULE hModule)
     FreeLibraryAndExitThread(hModule, 0);
 }
 
-void RenderImGuiItems()
+void RenderEntityList()
 {
     uintptr_t world = *(uintptr_t*)worldAddress;
     uintptr_t entitiesList = *(uintptr_t*)(world + 0x64);
@@ -120,8 +117,24 @@ void RenderImGuiItems()
             {
                 ImGui::Text("%s (%s, %i, %s)", (char*)entityNameAddress, entityLabel, i, loadedText);
             }
+
+            if (isLoaded)
+            {
+                ImGui::SameLine();
+                ImGui::PushID(i);
+                if (ImGui::Button("Swap to"))
+                {
+                    SetPlayerEntityIndex(i);
+                }
+                ImGui::PopID();
+            }
         }
     }
+}
+
+void RenderImGuiItems()
+{
+    RenderEntityList();
 
     // Give studs
     if (ImGui::CollapsingHeader("Cheats"))
@@ -131,29 +144,6 @@ void RenderImGuiItems()
         if (ImGui::Button("Give argent"))
         {
             *(int*)studsAddress += moneyToGive;
-        }
-    }
-
-    if (ImGui::CollapsingHeader("Skins"))
-    {
-        if (ImGui::Button("Harry"))
-        {
-            SetPlayerEntityIndex(550);
-        }
-
-        if (ImGui::Button("Hermione"))
-        {
-            SetPlayerEntityIndex(551);
-        }
-
-        if (ImGui::Button("Ron"))
-        {
-            SetPlayerEntityIndex(735);
-        }
-        
-        if (ImGui::Button("Voldemort"))
-        {
-            SetPlayerEntityIndex(683);
         }
     }
 }
