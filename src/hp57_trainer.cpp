@@ -16,6 +16,8 @@ uintptr_t playerCharacterAddress;
 uintptr_t worldAddress;
 uintptr_t entityList;
 
+uintptr_t gameFocusPtr;
+
 _setPlayerEntityIndex setPlayerEntityIndex;
 _getUnkEntityValue getUnkEntityValue;
 
@@ -35,7 +37,7 @@ void LoadAddresses()
     setPlayerEntityIndex = (_setPlayerEntityIndex)(0x00748CF0);
     getUnkEntityValue = (_getUnkEntityValue)(0x00877C20);
 
-    uintptr_t gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
+    gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 }
 
 void SetPlayerEntityIndex(int index)
@@ -58,6 +60,8 @@ void MainThread(HMODULE hModule)
 
     while (true)
     {
+        *(int*)gameFocusPtr = 1; // Force game to render even when not focused
+
         DrawImgui();
 
         if (GetAsyncKeyState(VK_F3) & 1)
