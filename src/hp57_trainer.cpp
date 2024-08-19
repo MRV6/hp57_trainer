@@ -78,8 +78,6 @@ void MainThread(HMODULE hModule)
     std::cout << "Exiting trainer ..." << std::endl;
 
     CleanupImgui();
-
-    Sleep(500); // Sleep before unloading DLL
     MessageBeep(MB_OK);
 
     fclose(f);
@@ -143,9 +141,9 @@ void RenderImGuiItems()
     // Give studs
     if (ImGui::CollapsingHeader("Cheats"))
     {
-        ImGui::InputInt("Montant", &moneyToGive, 100, 1000);
+        ImGui::InputInt("Amount", &moneyToGive, 100, 1000);
 
-        if (ImGui::Button("Give argent"))
+        if (ImGui::Button("Give studs"))
         {
             *(int*)studsAddress += moneyToGive;
         }
