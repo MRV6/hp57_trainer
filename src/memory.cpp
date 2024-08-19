@@ -5,12 +5,12 @@
 
 uintptr_t GetPointerAddress(uintptr_t pointer, std::vector<uintptr_t> offsets)
 {
-	uintptr_t address = pointer;
+    uintptr_t address = pointer;
 
-	for (int i = 0; i < offsets.size(); i++) {
-		address = *(uintptr_t*)address;
-		address += offsets[i];
-	}
+    for (int i = 0; i < offsets.size(); i++) {
+        address = *(uintptr_t*)address;
+        address += offsets[i];
+    }
 
-	return address;
+    return address;
 }
