@@ -98,18 +98,18 @@ void RenderEntityList()
     uintptr_t entitiesList = *(uintptr_t*)(world + 0x64);
     int maxEntityId = *(int*)(world + 0x30);
 
-    ImGui::Text("Max entity id: %i", maxEntityId);
-
     if (ImGui::CollapsingHeader("DEBUG: Models"))
     {
+        ImGui::Text("Max entity index: %i", maxEntityId);
+
         ImGui::InputText("Search", &entityListQuery);
         ImGui::Checkbox("Show only loaded models", &onlyLoadedModels);
 
         for (int i = 0; i < maxEntityId; i++)
         {
-            uintptr_t entity = *(uintptr_t*)(entitiesList + 4 * i);
-            uintptr_t entityNameAddress = *(uintptr_t*)(entity + 0x1C);
-            uintptr_t entityLabelAddress = *(uintptr_t*)(entity + 0xC);
+            uintptr_t entityAddress = *(uintptr_t*)(entitiesList + 4 * i);
+            uintptr_t entityNameAddress = *(uintptr_t*)(entityAddress + 0x1C);
+            uintptr_t entityLabelAddress = *(uintptr_t*)(entityAddress + 0xC);
 
             char* entityLabel = (char*)entityLabelAddress;
             char* entityName = (char*)entityNameAddress;
@@ -136,7 +136,7 @@ void RenderEntityList()
             const char* displayLabel = (std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : entityLabel;
             const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
 
-            ImGui::Text("%s (%s, %i, %s, %i)", entityName, displayLabel, i, loadedText, unkEntityValue);
+            ImGui::Text("%x: %s (%s, %i, %s, %i)", entityAddress, entityName, displayLabel, i, loadedText, unkEntityValue);
 
             if (isLoaded)
             {
@@ -160,10 +160,10 @@ void RenderImGuiItems()
     ImGui::Text("Y: %f", *(float*)(localPlayer + 0x2C));
     ImGui::Text("Z: %f", *(float*)(localPlayer + 0x28));*/
     
-    if (ImGui::Button("Test"))
+    /*if (ImGui::Button("Test"))
     {
         cout << testFunc(*(uintptr_t*)localPlayerAddressPtr, 9) << endl;
-    }
+    }*/
 
     RenderEntityList();
 
