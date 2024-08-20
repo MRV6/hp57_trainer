@@ -27,6 +27,7 @@ _testFunc testFunc;
 
 int moneyToGive = 0;
 std::string entityListQuery;
+bool onlyLoadedModels = false;
 
 void LoadAddresses()
 {
@@ -101,7 +102,8 @@ void RenderEntityList()
 
     if (ImGui::CollapsingHeader("DEBUG: Models"))
     {
-        ImGui::InputText("Rechercher", &entityListQuery);
+        ImGui::InputText("Search", &entityListQuery);
+        ImGui::Checkbox("Show only loaded models", &onlyLoadedModels);
 
         for (int i = 0; i < maxEntityId; i++)
         {
@@ -117,26 +119,34 @@ void RenderEntityList()
             std::transform(entityNameStr.begin(), entityNameStr.end(), entityNameStr.begin(), ::tolower);
             std::transform(query.begin(), query.end(), query.begin(), ::tolower);
 
-            if (query == "" || (entityNameStr.find(query) != std::string::npos))
+            if ((query != "" && (entityNameStr.find(query) == std::string::npos)))
             {
-                const char* displayLabel = (std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : entityLabel;
+                continue;
+            }
 
-                int unkEntityValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
-                bool isLoaded = unkEntityValue != 0;
-                const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
 
-                ImGui::Text("%s (%s, %i, %s, %i)", entityName, displayLabel, i, loadedText, unkEntityValue);
+            int unkEntityValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
+            bool isLoaded = unkEntityValue != 0;
 
-                if (isLoaded)
+            if (onlyLoadedModels && !isLoaded)
+            {
+                continue;
+            }
+
+            const char* displayLabel = (std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : entityLabel;
+            const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
+
+            ImGui::Text("%s (%s, %i, %s, %i)", entityName, displayLabel, i, loadedText, unkEntityValue);
+
+            if (isLoaded)
+            {
+                ImGui::SameLine();
+                ImGui::PushID(i);
+                if (ImGui::Button("Swap to"))
                 {
-                    ImGui::SameLine();
-                    ImGui::PushID(i);
-                    if (ImGui::Button("Swap to"))
-                    {
-                        SetPlayerEntityIndex(i);
-                    }
-                    ImGui::PopID();
+                    SetPlayerEntityIndex(i);
                 }
+                ImGui::PopID();
             }
         }
     }
