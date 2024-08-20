@@ -1,7 +1,10 @@
 #include <windows.h>
 #include <iostream>
 #include <string>
+#include <algorithm>
+
 #include "../vendor/imgui/imgui.h"
+#include "../vendor/imgui/imgui_stdlib.h"
 #include "imgui_menu.h"
 #include "memory.h"
 #include "hp57_trainer.h"
@@ -20,8 +23,10 @@ uintptr_t gameFocusPtr;
 
 _setPlayerEntityIndex setPlayerEntityIndex;
 _getUnkEntityValue getUnkEntityValue;
+_testFunc testFunc;
 
 int moneyToGive = 0;
+std::string entityListQuery;
 
 void LoadAddresses()
 {
@@ -36,6 +41,7 @@ void LoadAddresses()
 
     setPlayerEntityIndex = (_setPlayerEntityIndex)(0x00748CF0);
     getUnkEntityValue = (_getUnkEntityValue)(0x00877C20);
+    testFunc = (_testFunc)(0x007338C0);
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 }
@@ -60,7 +66,7 @@ void MainThread(HMODULE hModule)
 
     while (true)
     {
-        *(int*)gameFocusPtr = 1; // Force game to render even when not focused
+        //*(int*)gameFocusPtr = 1; // Force game to render even when not focused
 
         DrawImgui();
 
@@ -93,10 +99,10 @@ void RenderEntityList()
 
     ImGui::Text("Max entity id: %i", maxEntityId);
 
-    int modelsCount = maxEntityId / 4;
-
     if (ImGui::CollapsingHeader("DEBUG: Models"))
     {
+        ImGui::InputText("Rechercher", &entityListQuery);
+
         for (int i = 0; i < maxEntityId; i++)
         {
             uintptr_t entity = *(uintptr_t*)(entitiesList + 4 * i);
@@ -104,31 +110,33 @@ void RenderEntityList()
             uintptr_t entityLabelAddress = *(uintptr_t*)(entity + 0xC);
 
             char* entityLabel = (char*)entityLabelAddress;
+            char* entityName = (char*)entityNameAddress;
+            
+            std::string entityNameStr = std::string(entityName);
+            std::string query = entityListQuery.c_str();
+            std::transform(entityNameStr.begin(), entityNameStr.end(), entityNameStr.begin(), ::tolower);
+            std::transform(query.begin(), query.end(), query.begin(), ::tolower);
 
-            bool isLabelValid = std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos;
-
-            int unkEntityValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
-            bool isLoaded = unkEntityValue != 0;
-            const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
-
-            if (isLabelValid)
+            if (query == "" || (entityNameStr.find(query) != std::string::npos))
             {
-                ImGui::Text("%s (%i, %s)", (char*)entityNameAddress, i, loadedText);
-            }
-            else
-            {
-                ImGui::Text("%s (%s, %i, %s)", (char*)entityNameAddress, entityLabel, i, loadedText);
-            }
+                const char* displayLabel = (std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : entityLabel;
 
-            if (isLoaded)
-            {
-                ImGui::SameLine();
-                ImGui::PushID(i);
-                if (ImGui::Button("Swap to"))
+                int unkEntityValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
+                bool isLoaded = unkEntityValue != 0;
+                const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
+
+                ImGui::Text("%s (%s, %i, %s, %i)", entityName, displayLabel, i, loadedText, unkEntityValue);
+
+                if (isLoaded)
                 {
-                    SetPlayerEntityIndex(i);
+                    ImGui::SameLine();
+                    ImGui::PushID(i);
+                    if (ImGui::Button("Swap to"))
+                    {
+                        SetPlayerEntityIndex(i);
+                    }
+                    ImGui::PopID();
                 }
-                ImGui::PopID();
             }
         }
     }
@@ -136,6 +144,17 @@ void RenderEntityList()
 
 void RenderImGuiItems()
 {
+    /*uintptr_t localPlayer = *(uintptr_t*)localPlayerAddressPtr;
+
+    ImGui::Text("X: %f", *(float*)(localPlayer + 0x24));
+    ImGui::Text("Y: %f", *(float*)(localPlayer + 0x2C));
+    ImGui::Text("Z: %f", *(float*)(localPlayer + 0x28));*/
+    
+    if (ImGui::Button("Test"))
+    {
+        cout << testFunc(*(uintptr_t*)localPlayerAddressPtr, 9) << endl;
+    }
+
     RenderEntityList();
 
     // Give studs
