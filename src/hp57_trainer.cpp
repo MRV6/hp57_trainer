@@ -17,19 +17,21 @@ uintptr_t localPlayerAddressPtr;
 
 uintptr_t playerCharacterAddress;
 uintptr_t worldAddress;
-uintptr_t entityList;
 
 uintptr_t gameFocusPtr;
-uintptr_t alphaAddress;
+//uintptr_t alphaAddress;
+uintptr_t harryGameObjectPtr;
 
 _setPlayerEntityIndex setPlayerEntityIndex;
 _getUnkEntityValue getUnkEntityValue;
 _loadFunc loadFunc;
 
-std::string entityListQuery;
+std::string modelListQuery;
 int moneyToGive = 0;
 bool onlyLoadedModels = false;
 float localPlayerAlpha = 1.0;
+
+// TODO: Cleanup code and make some structs
 
 void LoadAddresses()
 {
@@ -48,7 +50,8 @@ void LoadAddresses()
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 
-    alphaAddress = GetPointerAddress(baseAddress + 0x00C53930, { 0x130, 0xAE0 });
+    //alphaAddress = GetPointerAddress(baseAddress + 0x00C53930, { 0x130, 0xAE0 });
+    harryGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
 }
 
 void SetPlayerEntityIndex(int index)
@@ -61,7 +64,9 @@ void SetPlayerEntityIndex(int index)
 void HandleData()
 {
     *(int*)gameFocusPtr = 1; // Force game to render even when not focused
-    *(float*)alphaAddress = localPlayerAlpha;
+
+    // Alpha address if dynamic, re-add it later once we found a way to get the parent
+    //*(float*)alphaAddress = localPlayerAlpha;
 }
 
 void MainThread(HMODULE hModule)
@@ -102,51 +107,51 @@ void MainThread(HMODULE hModule)
     FreeLibraryAndExitThread(hModule, 0);
 }
 
-void RenderEntityList()
+void RenderModelsList()
 {
     uintptr_t world = *(uintptr_t*)worldAddress;
-    uintptr_t entitiesList = *(uintptr_t*)(world + 0x64);
-    int maxEntityId = *(int*)(world + 0x30);
+    uintptr_t modelsList = *(uintptr_t*)(world + 0x64);
+    int maxModelId = *(int*)(world + 0x30);
 
     if (ImGui::CollapsingHeader("DEBUG: Models"))
     {
-        ImGui::Text("Max entity index: %i", maxEntityId);
+        ImGui::Text("Max model index: %i", maxModelId);
 
-        ImGui::InputText("Search", &entityListQuery);
+        ImGui::InputText("Search", &modelListQuery);
         ImGui::Checkbox("Show only loaded models", &onlyLoadedModels);
 
-        for (int i = 0; i < maxEntityId; i++)
+        for (int i = 0; i < maxModelId; i++)
         {
-            uintptr_t entityAddress = *(uintptr_t*)(entitiesList + 4 * i);
-            uintptr_t entityNameAddress = *(uintptr_t*)(entityAddress + 0x1C);
-            uintptr_t entityLabelAddress = *(uintptr_t*)(entityAddress + 0xC);
+            uintptr_t modelAddress = *(uintptr_t*)(modelsList + 4 * i);
+            uintptr_t modelNameAddress = *(uintptr_t*)(modelAddress + 0x1C);
+            uintptr_t modelLabelAddress = *(uintptr_t*)(modelAddress + 0xC);
 
-            char* entityLabel = (char*)entityLabelAddress;
-            char* entityName = (char*)entityNameAddress;
+            char* modelLabel = (char*)modelLabelAddress;
+            char* modelName = (char*)modelNameAddress;
             
-            std::string entityNameStr = std::string(entityName);
-            std::string query = entityListQuery.c_str();
-            std::transform(entityNameStr.begin(), entityNameStr.end(), entityNameStr.begin(), ::tolower);
+            std::string modelNameStr = std::string(modelName);
+            std::string query = modelListQuery.c_str();
+            std::transform(modelNameStr.begin(), modelNameStr.end(), modelNameStr.begin(), ::tolower);
             std::transform(query.begin(), query.end(), query.begin(), ::tolower);
 
-            if ((query != "" && (entityNameStr.find(query) == std::string::npos)))
+            if ((query != "" && (modelNameStr.find(query) == std::string::npos)))
             {
                 continue;
             }
 
 
-            int unkEntityValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
-            bool isLoaded = unkEntityValue != 0;
+            int unkModelValue = getUnkEntityValue(*(uintptr_t*)worldAddress, i, 0xE);
+            bool isLoaded = unkModelValue != 0;
 
             if (onlyLoadedModels && !isLoaded)
             {
                 continue;
             }
 
-            const char* displayLabel = (std::string(entityLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : entityLabel;
+            const char* displayLabel = (std::string(modelLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : modelLabel;
             const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
 
-            ImGui::Text("%x: %s (%s, %i, %s, %i)", entityAddress, entityName, displayLabel, i, loadedText, unkEntityValue);
+            ImGui::Text("%x: %s (%s, %i, %s, %i)", modelAddress, modelName, displayLabel, i, loadedText, unkModelValue);
 
             if (isLoaded)
             {
@@ -176,13 +181,15 @@ void RenderEntityList()
 
 void RenderImGuiItems()
 {
-    /*uintptr_t localPlayer = *(uintptr_t*)localPlayerAddressPtr;
+    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
 
-    ImGui::Text("X: %f", *(float*)(localPlayer + 0x24));
-    ImGui::Text("Y: %f", *(float*)(localPlayer + 0x2C));
-    ImGui::Text("Z: %f", *(float*)(localPlayer + 0x28));*/
+    ImGui::Text("Game object address : %x", harryGameObjectAddress);
+    ImGui::Text("X: %f", *(float*)(harryGameObjectAddress + 0x24));
+    ImGui::Text("Y: %f", *(float*)(harryGameObjectAddress + 0x2C));
+    ImGui::Text("Z: %f", *(float*)(harryGameObjectAddress + 0x28));
+    ImGui::Text("Character model: %s", (char*)(*(uintptr_t*)(harryGameObjectAddress + 0x14)));
 
-    RenderEntityList();
+    RenderModelsList();
 
     if (ImGui::CollapsingHeader("Cheats"))
     {
@@ -195,7 +202,8 @@ void RenderImGuiItems()
         }
 
         // Local player alpha
-        ImGui::InputFloat("Player alpha", &localPlayerAlpha, 0.05, 0.1, "%.1f");
+        // Alpha = game object + 130 + EF0
+        /*ImGui::InputFloat("Player alpha", &localPlayerAlpha, 0.05, 0.1, "%.1f");
 
         if (localPlayerAlpha < 0.0)
         {
@@ -204,7 +212,7 @@ void RenderImGuiItems()
         else if (localPlayerAlpha > 1.0)
         {
             localPlayerAlpha = 1.0;
-        }
+        }*/
     }
 }
 
