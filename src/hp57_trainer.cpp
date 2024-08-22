@@ -20,14 +20,16 @@ uintptr_t worldAddress;
 uintptr_t entityList;
 
 uintptr_t gameFocusPtr;
+uintptr_t alphaAddress;
 
 _setPlayerEntityIndex setPlayerEntityIndex;
 _getUnkEntityValue getUnkEntityValue;
-_testFunc testFunc;
+_loadFunc loadFunc;
 
-int moneyToGive = 0;
 std::string entityListQuery;
+int moneyToGive = 0;
 bool onlyLoadedModels = false;
+float localPlayerAlpha = 1.0;
 
 void LoadAddresses()
 {
@@ -42,9 +44,11 @@ void LoadAddresses()
 
     setPlayerEntityIndex = (_setPlayerEntityIndex)(0x00748CF0);
     getUnkEntityValue = (_getUnkEntityValue)(0x00877C20);
-    testFunc = (_testFunc)(0x007338C0);
+    loadFunc = (_loadFunc)(0x006D61F0);
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
+
+    alphaAddress = GetPointerAddress(baseAddress + 0x00C53930, { 0x130, 0xAE0 });
 }
 
 void SetPlayerEntityIndex(int index)
@@ -52,6 +56,12 @@ void SetPlayerEntityIndex(int index)
     cout << "Set player entity index to " << index << endl;
     int success = setPlayerEntityIndex(*(uintptr_t*)localPlayerAddressPtr, index, 550, 1, false, true);
     cout << "Set player entity index result " << success << endl;
+}
+
+void HandleData()
+{
+    *(int*)gameFocusPtr = 1; // Force game to render even when not focused
+    *(float*)alphaAddress = localPlayerAlpha;
 }
 
 void MainThread(HMODULE hModule)
@@ -67,9 +77,9 @@ void MainThread(HMODULE hModule)
 
     while (true)
     {
-        //*(int*)gameFocusPtr = 1; // Force game to render even when not focused
 
         DrawImgui();
+        HandleData();
 
         if (GetAsyncKeyState(VK_F3) & 1)
         {
@@ -148,6 +158,18 @@ void RenderEntityList()
                 }
                 ImGui::PopID();
             }
+            else
+            {
+                ImGui::SameLine();
+                ImGui::PushID(i);
+                if (ImGui::Button("Load"))
+                {
+                    //cout << "Char def: " << *(uintptr_t*)(entityAddress + 0x50) << endl;
+                    cout << "Load level" << endl;
+                    cout << loadFunc(*(uintptr_t*)0x006D61F0) << endl;
+                }
+                ImGui::PopID();
+            }
         }
     }
 }
@@ -159,22 +181,29 @@ void RenderImGuiItems()
     ImGui::Text("X: %f", *(float*)(localPlayer + 0x24));
     ImGui::Text("Y: %f", *(float*)(localPlayer + 0x2C));
     ImGui::Text("Z: %f", *(float*)(localPlayer + 0x28));*/
-    
-    /*if (ImGui::Button("Test"))
-    {
-        cout << testFunc(*(uintptr_t*)localPlayerAddressPtr, 9) << endl;
-    }*/
 
     RenderEntityList();
 
-    // Give studs
     if (ImGui::CollapsingHeader("Cheats"))
     {
+        // Give studs
         ImGui::InputInt("Amount", &moneyToGive, 100, 1000);
 
         if (ImGui::Button("Give studs"))
         {
             *(int*)studsAddress += moneyToGive;
+        }
+
+        // Local player alpha
+        ImGui::InputFloat("Player alpha", &localPlayerAlpha, 0.05, 0.1, "%.1f");
+
+        if (localPlayerAlpha < 0.0)
+        {
+            localPlayerAlpha = 0.0;
+        }
+        else if (localPlayerAlpha > 1.0)
+        {
+            localPlayerAlpha = 1.0;
         }
     }
 }
