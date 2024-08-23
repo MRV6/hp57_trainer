@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <format>
 
 #include "../vendor/imgui/imgui.h"
 #include "../vendor/imgui/imgui_stdlib.h"
@@ -31,7 +32,7 @@ int moneyToGive = 0;
 bool onlyLoadedModels = false;
 float localPlayerAlpha = 1.0;
 
-// TODO: Cleanup code and make some structs
+// TODO: Check if pointers are valid before trying to read them to fix crashes
 
 void LoadAddresses()
 {
@@ -46,7 +47,7 @@ void LoadAddresses()
 
     setPlayerEntityIndex = (_setPlayerEntityIndex)(0x00748CF0);
     getUnkEntityValue = (_getUnkEntityValue)(0x00877C20);
-    loadFunc = (_loadFunc)(0x006D61F0);
+    loadFunc = (_loadFunc)(0x007B9D20);
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 
@@ -109,12 +110,12 @@ void MainThread(HMODULE hModule)
 
 void RenderModelsList()
 {
-    uintptr_t world = *(uintptr_t*)worldAddress;
-    uintptr_t modelsList = *(uintptr_t*)(world + 0x64);
-    int maxModelId = *(int*)(world + 0x30);
-
     if (ImGui::CollapsingHeader("DEBUG: Models"))
     {
+        uintptr_t world = *(uintptr_t*)worldAddress;
+        uintptr_t modelsList = *(uintptr_t*)(world + 0x64);
+        int maxModelId = *(int*)(world + 0x30);
+
         ImGui::Text("Max model index: %i", maxModelId);
 
         ImGui::InputText("Search", &modelListQuery);
@@ -169,9 +170,8 @@ void RenderModelsList()
                 ImGui::PushID(i);
                 if (ImGui::Button("Load"))
                 {
-                    //cout << "Char def: " << *(uintptr_t*)(entityAddress + 0x50) << endl;
-                    cout << "Load level" << endl;
-                    cout << loadFunc(*(uintptr_t*)0x006D61F0) << endl;
+                    //cout << "Char def: " << *(uintptr_t*)(modelAddress + 0x50) << endl;
+                    cout << loadFunc(modelAddress) << endl;
                 }
                 ImGui::PopID();
             }
@@ -179,17 +179,63 @@ void RenderModelsList()
     }
 }
 
+void RenderGameObjectsList()
+{
+    if (ImGui::CollapsingHeader("DEBUG: Game objects list"))
+    {
+        uintptr_t gameObjectsList = GetPointerAddress(baseAddress + 0x00C48AEC, { 0x120, 0x434 });
+
+        if (gameObjectsList)
+        {
+            for (int i = 0; i < 32; i++)
+            {
+                uintptr_t gameObjectAddress = *(uintptr_t*)(gameObjectsList + 4 * i);
+
+                if (gameObjectAddress != 0)
+                {
+                    GameObject* gameObject = (GameObject*)gameObjectAddress;
+
+                    ImGui::PushID(i);
+                    ImGui::SetNextItemOpen(true);
+
+                    std::string objectAddressStr = std::format("{:x}", gameObjectAddress);
+
+                    if (ImGui::TreeNode(objectAddressStr.c_str()))
+                    {
+                        ImGui::Text("Model : %s", (char*)(gameObject->model));
+                        ImGui::Text("X: %.3f", gameObject->X);
+                        ImGui::Text("Y: %.3f", gameObject->Y);
+                        ImGui::Text("Z: %.3f", gameObject->Z);
+                        ImGui::TreePop();
+                    }
+
+                    ImGui::PopID();
+                }
+            }
+        }
+    }
+}
+
 void RenderImGuiItems()
 {
-    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+    if (ImGui::CollapsingHeader("DEBUG: Character infos"))
+    {
+        uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
 
-    ImGui::Text("Game object address : %x", harryGameObjectAddress);
-    ImGui::Text("X: %f", *(float*)(harryGameObjectAddress + 0x24));
-    ImGui::Text("Y: %f", *(float*)(harryGameObjectAddress + 0x2C));
-    ImGui::Text("Z: %f", *(float*)(harryGameObjectAddress + 0x28));
-    ImGui::Text("Character model: %s", (char*)(*(uintptr_t*)(harryGameObjectAddress + 0x14)));
+        if (harryGameObjectAddress)
+        {
+            GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
+
+            ImGui::Text("Game object address : %x", harryGameObjectAddress);
+            ImGui::Text("X: %.3f", harryGameObject->X);
+            ImGui::Text("Y: %.3f", harryGameObject->Y);
+            ImGui::Text("Z: %.3f", harryGameObject->Z);
+            ImGui::Text("Character model: %s", (char*)(harryGameObject->model));
+        }
+    }
 
     RenderModelsList();
+    RenderGameObjectsList();
 
     if (ImGui::CollapsingHeader("Cheats"))
     {
@@ -200,19 +246,6 @@ void RenderImGuiItems()
         {
             *(int*)studsAddress += moneyToGive;
         }
-
-        // Local player alpha
-        // Alpha = game object + 130 + EF0
-        /*ImGui::InputFloat("Player alpha", &localPlayerAlpha, 0.05, 0.1, "%.1f");
-
-        if (localPlayerAlpha < 0.0)
-        {
-            localPlayerAlpha = 0.0;
-        }
-        else if (localPlayerAlpha > 1.0)
-        {
-            localPlayerAlpha = 1.0;
-        }*/
     }
 }
 

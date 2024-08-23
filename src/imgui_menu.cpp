@@ -29,12 +29,16 @@ void InitImgui()
 {
     gameWindow = FindWindow(0, L"LEGO® Harry Potter™ 2");
 
+    ShowWindow(gameWindow, SW_SHOW);
+    UpdateWindow(gameWindow);
+    SetForegroundWindow(gameWindow);
+    SetFocus(gameWindow);
+
     // Create application window
     wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"HP57 Trainer", nullptr };
     RegisterClassEx(&wc);
-    hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"HP57 Trainer", WS_OVERLAPPED, 1, 1, 1280, 720, NULL, NULL, wc.hInstance, NULL);
+    hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"HP57 Trainer", WS_POPUP, 1, 1, 1280, 720, NULL, NULL, wc.hInstance, NULL);
 
-    //SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
     SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 0, ULW_COLORKEY);
 
     // Initialize Direct3D
