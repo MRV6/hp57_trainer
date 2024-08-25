@@ -22,3 +22,13 @@ public:
     int32_t maxHealth; //0x0F10
     char pad_0F14[1392]; //0x0F14
 };
+
+class CharacterPhantomEntity
+{
+public:
+    char pad_0000[112]; //0x0000
+    float X; //0x0070
+    float Z; //0x0074
+    float Y; //0x0078
+    char pad_007C[196]; //0x007C
+};

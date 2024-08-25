@@ -33,6 +33,7 @@ float localPlayerAlpha = 1.0;
 bool maxHealth = false;
 
 // TODO: Check if pointers are valid before trying to read them to fix crashes
+// TODO: Make all of this in separate files using an event manager (HP57::OnTick, HP57::OnLoad, HP57::OnStop ...)
 
 void LoadAddresses()
 {
@@ -220,6 +221,7 @@ void RenderGameObjectsList()
                         ImGui::Text("X: %.3f", gameObject->X);
                         ImGui::Text("Y: %.3f", gameObject->Y);
                         ImGui::Text("Z: %.3f", gameObject->Z);
+                        ImGui::Text("Child address: %x", gameObject->child);
 
                         // Somehow this functions does not really delete the game object
                         // It just removes it from the game objects list but the entity is still physically here
@@ -230,32 +232,32 @@ void RenderGameObjectsList()
                             deleteGameObject(unkClass, gameObjectAddress, gameObjectAddress);
                         }*/
 
-                        // The game has some checks which teleport the player back and i'm too lazy to research it rn
-                        //if (ImGui::Button("Teleport to"))
-                        //{
-                        //    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+                        if (ImGui::Button("Teleport to"))
+                        {
+                            uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
 
-                        //    if (harryGameObjectAddress)
-                        //    {
-                        //        GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
+                            if (harryGameObjectAddress)
+                            {
+                                GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
 
-                        //        harryGameObject->X = gameObject->X;
-                        //        harryGameObject->Y = gameObject->Y;
-                        //        harryGameObject->Z = gameObject->Z;
+                                uintptr_t characterPhantomEntity = GetPointerAddress(baseAddress + 0x00C58348, { 0 });
+                                CharacterPhantomEntity* charPhantomEntity = (CharacterPhantomEntity*)characterPhantomEntity;
 
-                        //        *(float*)(harryGameObject->child + 0x70) = gameObject->X;
-                        //        *(float*)(harryGameObject->child + 0x78) = gameObject->Y;
-                        //        *(float*)(harryGameObject->child + 0x74) = gameObject->Z;
+                                if (harryGameObject && charPhantomEntity)
+                                {
+                                    float z = gameObject->Z + 0.5;
 
-                        //        // The game also expects us to set the coords to the game object brain
-                        //        uintptr_t gameObjectBrainAddress = (uintptr_t)harryGameObject->child + 0x88;
-                        //        uintptr_t gameObjectBrain = *(uintptr_t*)gameObjectBrainAddress;
+                                    // The game expects us to set the position on both of these classes
+                                    harryGameObject->X = gameObject->X;
+                                    harryGameObject->Y = gameObject->Y;
+                                    harryGameObject->Z = z;
 
-                        //        *(float*)(gameObjectBrain + 0x40) = gameObject->X;
-                        //        *(float*)(gameObjectBrain + 0x44) = gameObject->Z;
-                        //        *(float*)(gameObjectBrain + 0x48) = gameObject->Y;
-                        //    }
-                        //}
+                                    charPhantomEntity->X = gameObject->X;
+                                    charPhantomEntity->Y = gameObject->Y;
+                                    charPhantomEntity->Z = z;
+                                }
+                            }
+                        }
 
                         ImGui::TreePop();
                     }
