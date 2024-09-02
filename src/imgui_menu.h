@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-void InitImgui();
+bool InitImgui();
 void CleanupImgui();
 void DrawImgui();
 void ToggleMenu();

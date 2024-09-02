@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\hp57_trainer.cpp" />
+    <ClCompile Include="src\game_objects_list.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\imgui_menu.cpp" />
     <ClCompile Include="src\memory.cpp" />
+    <ClCompile Include="src\models_list.cpp" />
     <ClCompile Include="vendor\imgui\imgui.cpp" />
     <ClCompile Include="vendor\imgui\imgui_demo.cpp" />
     <ClCompile Include="vendor\imgui\imgui_draw.cpp" />
@@ -32,9 +34,11 @@
     <ClCompile Include="vendor\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\hp57_trainer.h" />
+    <ClInclude Include="src\game_objects_list.h" />
+    <ClInclude Include="src\main.h" />
     <ClInclude Include="src\imgui_menu.h" />
     <ClInclude Include="src\memory.h" />
+    <ClInclude Include="src\models_list.h" />
     <ClInclude Include="vendor\imgui\imconfig.h" />
     <ClInclude Include="vendor\imgui\imgui.h" />
     <ClInclude Include="vendor\imgui\imgui_impl_dx9.h" />

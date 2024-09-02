@@ -3,83 +3,112 @@
 #include "../vendor/imgui/imgui_impl_win32.h"
 #include <d3d9.h>
 #include <tchar.h>
-#include <iostream>
-#include <io.h>
-#include "hp57_trainer.h"
+#include "main.h"
 
+// Data
 static LPDIRECT3D9              g_pD3D = nullptr;
 static LPDIRECT3DDEVICE9        g_pd3dDevice = nullptr;
 static bool                     g_DeviceLost = false;
 static UINT                     g_ResizeWidth = 0, g_ResizeHeight = 0;
 static D3DPRESENT_PARAMETERS    g_d3dpp = {};
 
+// Forward declarations of helper functions
 bool CreateDeviceD3D(HWND hWnd);
 void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-HWND hwnd;
-WNDCLASSEXW wc;
-
-BOOL isMenuOpened = false;
-WNDPROC oldWndProc;
+HWND hwnd = NULL;
 HWND gameWindow;
+WNDPROC oldWndProc = NULL;
 
-void InitImgui()
+bool isMenuVisible = false;
+
+void ToggleMenu()
 {
-    gameWindow = FindWindow(0, L"LEGO® Harry Potter™ 2");
+    isMenuVisible = !isMenuVisible;
 
-    ShowWindow(gameWindow, SW_SHOW);
-    UpdateWindow(gameWindow);
-    SetForegroundWindow(gameWindow);
-    SetFocus(gameWindow);
+    if (isMenuVisible)
+    {
+        ::ShowWindow(hwnd, SW_SHOWDEFAULT);
+        ::SetFocus(hwnd);
+        ::SetForegroundWindow(hwnd);
+        ::UpdateWindow(hwnd);
+    }
+    else
+    {
+        ::ShowWindow(hwnd, SW_HIDE);
+        ::UpdateWindow(hwnd);
+    }
+}
 
+// Main code
+bool InitImgui()
+{
     // Create application window
-    wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"HP57 Trainer", nullptr };
-    RegisterClassEx(&wc);
-    hwnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"HP57 Trainer", WS_POPUP, 1, 1, 1280, 720, NULL, NULL, wc.hInstance, NULL);
-
-    SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 0, ULW_COLORKEY);
+    //ImGui_ImplWin32_EnableDpiAwareness();
+    WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+    ::RegisterClassExW(&wc);
+    hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_POPUP, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
     {
         CleanupDeviceD3D();
-        UnregisterClassW(wc.lpszClassName, wc.hInstance);
-        return;
+        ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+        return 1;
     }
+
+    ::SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 0, ULW_COLORKEY);
+
+    gameWindow = FindWindow(0, L"LEGO® Harry Potter™ 2");
+    oldWndProc = (WNDPROC)SetWindowLongPtr(gameWindow, GWLP_WNDPROC, (LONG_PTR)WndProc); // Replace window procedure by our own
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX9_Init(g_pd3dDevice);
 
-    return;
-}
+    // Our state
+    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-void DrawImgui()
-{
-    if (isMenuOpened)
+    // Main loop
+    bool done = false;
+    while (!done)
     {
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
-        while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+        while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-            /*if (msg.message == WM_QUIT)
-                done = true;*/
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
         }
+
+        GameLoop();
+
+        if (GetAsyncKeyState(VK_F3) & 1)
+        {
+            ToggleMenu();
+        }
+
+        if (GetAsyncKeyState(VK_END) & 1)
+        {
+            done = true;
+        }
+
+        if (done)
+            break;
 
         // Handle lost D3D9 device
         if (g_DeviceLost)
@@ -88,6 +117,7 @@ void DrawImgui()
             if (hr == D3DERR_DEVICELOST)
             {
                 ::Sleep(10);
+                continue;
             }
             if (hr == D3DERR_DEVICENOTRESET)
                 ResetDevice();
@@ -108,39 +138,30 @@ void DrawImgui()
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
+        if (isMenuVisible)
         {
-            ImGui::Begin("HP57 Trainer");
             RenderImGuiItems();
-            ImGui::End();
         }
 
         // Rendering
-        ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-
         ImGui::EndFrame();
         g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
         g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
         g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
         D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x * clear_color.w * 255.0f), (int)(clear_color.y * clear_color.w * 255.0f), (int)(clear_color.z * clear_color.w * 255.0f), (int)(clear_color.w * 255.0f));
         g_pd3dDevice->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0f, 0);
-
         if (g_pd3dDevice->BeginScene() >= 0)
         {
             ImGui::Render();
             ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
             g_pd3dDevice->EndScene();
         }
-
         HRESULT result = g_pd3dDevice->Present(nullptr, nullptr, nullptr, nullptr);
         if (result == D3DERR_DEVICELOST)
-        {
             g_DeviceLost = true;
-        }
     }
-}
 
-void CleanupImgui()
-{
+    // Cleanup
     SetWindowLongPtr(gameWindow, GWLP_WNDPROC, (LONG_PTR)oldWndProc); // Reset window procedure
 
     ImGui_ImplDX9_Shutdown();
@@ -148,9 +169,13 @@ void CleanupImgui()
     ImGui::DestroyContext();
 
     CleanupDeviceD3D();
-    DestroyWindow(hwnd);
-    UnregisterClassW(wc.lpszClassName, wc.hInstance);
+    ::DestroyWindow(hwnd);
+    ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+    return 0;
 }
+
+// Helper functions
 
 bool CreateDeviceD3D(HWND hWnd)
 {
@@ -185,26 +210,6 @@ void ResetDevice()
     if (hr == D3DERR_INVALIDCALL)
         IM_ASSERT(0);
     ImGui_ImplDX9_CreateDeviceObjects();
-}
-
-void ToggleMenu()
-{
-    if (isMenuOpened)
-    {
-        ShowWindow(hwnd, SW_HIDE);
-        SetWindowLongPtr(gameWindow, GWLP_WNDPROC, (LONG_PTR)oldWndProc); // Reset window procedure
-        isMenuOpened = false;
-    }
-    else
-    {
-        ShowWindow(hwnd, SW_SHOW);
-        UpdateWindow(hwnd);
-        SetForegroundWindow(hwnd);
-        SetFocus(hwnd);
-
-        oldWndProc = (WNDPROC)SetWindowLongPtr(gameWindow, GWLP_WNDPROC, (LONG_PTR)WndProc); // Replace window procedure by our own
-        isMenuOpened = true;
-    }
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
