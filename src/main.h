@@ -7,12 +7,12 @@ extern uintptr_t baseAddress;
 extern uintptr_t harryGameObjectPtr;
 extern uintptr_t modelsClassAddress;
 
-typedef int(__cdecl* _setPlayerEntityIndex)(int localPlayer, int entityIndex, int oldEntityIndex, int unusedInt, bool forceSet, bool unkBool);
+typedef int(__cdecl* _setPlayerModelIndex)(int localPlayer, int entityIndex, int oldEntityIndex, int unusedInt, bool forceSet, bool unkBool);
 typedef int(__thiscall* _getUnkEntityValue)(uintptr_t worldClass, int entityIndex, int unk);
 typedef int(__fastcall* _loadFunc)(uintptr_t charDefGameData);
 typedef int(__fastcall* _deleteGameObject)(int triggerManager, uintptr_t unk, uintptr_t gameObjectAddress);
 
-extern _setPlayerEntityIndex setPlayerEntityIndex;
+extern _setPlayerModelIndex setPlayerModelIndex;
 extern _getUnkEntityValue getUnkEntityValue;
 
 class GameObject

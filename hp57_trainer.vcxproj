@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\game_objects_list.cpp" />
+    <ClCompile Include="src\logs.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\imgui_menu.cpp" />
     <ClCompile Include="src\memory.cpp" />
@@ -35,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game_objects_list.h" />
+    <ClInclude Include="src\logs.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\imgui_menu.h" />
     <ClInclude Include="src\memory.h" />

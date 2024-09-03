@@ -1,23 +1,24 @@
 #include "../vendor/imgui/imgui.h"
 #include "../vendor/imgui/imgui_stdlib.h"
-#include "main.h"
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <format>
+#include "main.h"
+#include "logs.h"
 
 bool showModelsList = false;
 bool onlyLoadedModels = false;
 
 std::string modelListQuery;
 
-void SetPlayerEntityIndex(int index)
+void SetPlayerModelIndex(int index, const char* modelName)
 {
     uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
     if (harryGameObjectAddress)
     {
-        std::cout << "Set player entity index to " << index << std::endl;
-        int success = setPlayerEntityIndex(*(uintptr_t*)harryGameObjectAddress, index, 550, 1, false, true);
-        //std::cout << "Set player entity index result " << success << std::cout;
+        Logs::Push("Set player model to %s\n", modelName);
+        //int success = setPlayerModelIndex(*(uintptr_t*)harryGameObjectAddress, index, 550, 1, false, true);
     }
 }
 
@@ -73,7 +74,7 @@ void RenderModelsList()
             ImGui::PushID(i);
             if (ImGui::Button("Swap to"))
             {
-                SetPlayerEntityIndex(i);
+                SetPlayerModelIndex(i, modelName);
             }
             ImGui::PopID();
         }

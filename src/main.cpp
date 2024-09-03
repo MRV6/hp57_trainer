@@ -5,13 +5,16 @@
 #include <format>
 
 #include "../vendor/imgui/imgui.h"
+
 #include "imgui_menu.h"
 #include "memory.h"
+
 #include "main.h"
 #include "game_objects_list.h"
 #include "models_list.h"
+#include "logs.h"
 
-using namespace std;
+#define ENABLE_CONSOLE false
 
 uintptr_t baseAddress;
 uintptr_t studsAddress;
@@ -22,7 +25,7 @@ uintptr_t gameFocusPtr;
 //uintptr_t alphaAddress;
 uintptr_t harryGameObjectPtr;
 
-_setPlayerEntityIndex setPlayerEntityIndex;
+_setPlayerModelIndex setPlayerModelIndex;
 _getUnkEntityValue getUnkEntityValue;
 _loadFunc loadFunc;
 _deleteGameObject deleteGameObject;
@@ -45,7 +48,7 @@ void LoadAddresses()
 
     modelsClassAddress = 0x00F06ED0;
 
-    setPlayerEntityIndex = (_setPlayerEntityIndex)(0x00748CF0);
+    setPlayerModelIndex = (_setPlayerModelIndex)(0x00748CF0);
     getUnkEntityValue = (_getUnkEntityValue)(0x00877C20);
     loadFunc = (_loadFunc)(0x007B9D20);
     deleteGameObject = (_deleteGameObject)(0x00648600);
@@ -54,6 +57,8 @@ void LoadAddresses()
 
     //alphaAddress = GetPointerAddress(baseAddress + 0x00C53930, { 0x130, 0xAE0 });
     harryGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
+
+    Logs::Push("Addresses loaded !\n");
 }
 
 void GameLoop()
@@ -77,11 +82,20 @@ void GameLoop()
 
 void MainThread(HMODULE hModule)
 {
+#if ENABLE_CONSOLE
+    FILE* f;
+    AllocConsole();
+    freopen_s(&f, "CONOUT$", "w", stdout);
+#endif
+
     LoadAddresses();
 
-    std::cout << "Trainer ready" << std::endl;
     InitImgui();
-    std::cout << "Exiting trainer ..." << std::endl;
+
+#if ENABLE_CONSOLE
+    if (f != 0) fclose(f);
+    FreeConsole();
+#endif
 
     MessageBeep(MB_OK);
     FreeLibraryAndExitThread(hModule, 0);
@@ -97,6 +111,7 @@ void RenderCheats()
     if (ImGui::Button("Give studs"))
     {
         *(int*)studsAddress += moneyToGive;
+        Logs::Push("%d studs added !\n", moneyToGive);
     }
 
     // Max health
@@ -135,31 +150,18 @@ void RenderImGuiItems()
             ImGui::Checkbox("Show game objects list", &showGameObjectsList);
             ImGui::Checkbox("Show cheats", &showCheats);
             ImGui::Checkbox("Show local player infos", &showLocalPlayerInfos);
+            ImGui::Checkbox("Show logs", &Logs::Visible);
             ImGui::EndMenu();
         }
 
         ImGui::EndMainMenuBar();
     }
 
-    if (showModelsList)
-    {
-        RenderModelsList();
-    }
-
-    if (showGameObjectsList)
-    {
-        RenderGameObjectsList();
-    }
-
-    if (showCheats)
-    {
-        RenderCheats();
-    }
-
-    if (showLocalPlayerInfos)
-    {
-        RenderLocalPlayerInfos();
-    }
+    if (showModelsList) RenderModelsList();
+    if (showGameObjectsList) RenderGameObjectsList();
+    if (showCheats) RenderCheats();
+    if (showLocalPlayerInfos) RenderLocalPlayerInfos();
+    if (Logs::Visible) Logs::Draw();
 }
 
 
@@ -172,7 +174,10 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
             DisableThreadLibraryCalls(hModule);
             HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MainThread, hModule, NULL, NULL);
 
-            CloseHandle(hThread);
+            if (hThread != 0)
+            {
+                CloseHandle(hThread);
+            }
         }
     }
 

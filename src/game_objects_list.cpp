@@ -3,6 +3,7 @@
 #include <string>
 #include <format>
 #include "main.h"
+#include "logs.h"
 
 bool showGameObjectsList = false;
 
@@ -68,6 +69,8 @@ void RenderGameObjectsList()
                                 charPhantomEntity->X = gameObject->X;
                                 charPhantomEntity->Y = gameObject->Y;
                                 charPhantomEntity->Z = z;
+
+                                Logs::Push("Teleported to %x\n", gameObjectAddress);
                             }
                         }
                     }
