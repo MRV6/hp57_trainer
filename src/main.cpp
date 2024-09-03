@@ -26,7 +26,7 @@ uintptr_t gameFocusPtr;
 uintptr_t harryGameObjectPtr;
 
 _setPlayerModelIndex setPlayerModelIndex;
-_getUnkEntityValue getUnkEntityValue;
+_getUnkModelValue getUnkModelValue;
 _loadFunc loadFunc;
 _deleteGameObject deleteGameObject;
 
@@ -49,7 +49,7 @@ void LoadAddresses()
     modelsClassAddress = 0x00F06ED0;
 
     setPlayerModelIndex = (_setPlayerModelIndex)(0x00748CF0);
-    getUnkEntityValue = (_getUnkEntityValue)(0x00877C20);
+    getUnkModelValue = (_getUnkModelValue)(0x00877C20);
     loadFunc = (_loadFunc)(0x007B9D20);
     deleteGameObject = (_deleteGameObject)(0x00648600);
 

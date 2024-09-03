@@ -15,10 +15,19 @@ std::string modelListQuery;
 void SetPlayerModelIndex(int index, const char* modelName)
 {
     uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+
     if (harryGameObjectAddress)
     {
-        Logs::Push("Set player model to %s\n", modelName);
-        //int success = setPlayerModelIndex(*(uintptr_t*)harryGameObjectAddress, index, 550, 1, false, true);
+        int success = setPlayerModelIndex(harryGameObjectAddress, index, 550, 1, false, true);
+
+        if (success)
+        {
+            Logs::Push("Player model set to %s (index: %i)\n", modelName, index);
+        }
+        else
+        {
+            Logs::Push("Cannot set player model to %s (index: %i). Model is probably not loaded.\n", modelName, index);
+        }
     }
 }
 
@@ -55,7 +64,7 @@ void RenderModelsList()
         }
 
 
-        int unkModelValue = getUnkEntityValue(*(uintptr_t*)modelsClassAddress, i, 0xE);
+        int unkModelValue = getUnkModelValue(*(uintptr_t*)modelsClassAddress, i, 0xE);
         bool isLoaded = unkModelValue != 0;
 
         if (onlyLoadedModels && !isLoaded)
