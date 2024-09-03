@@ -18,16 +18,13 @@
 
 uintptr_t baseAddress;
 uintptr_t studsAddress;
-
 uintptr_t modelsClassAddress;
-
 uintptr_t gameFocusPtr;
 //uintptr_t alphaAddress;
 uintptr_t harryGameObjectPtr;
 
 _setPlayerModelIndex setPlayerModelIndex;
 _getUnkModelValue getUnkModelValue;
-_loadFunc loadFunc;
 _deleteGameObject deleteGameObject;
 
 int studsToGive = 0;
@@ -50,7 +47,6 @@ void LoadAddresses()
 
     setPlayerModelIndex = (_setPlayerModelIndex)(0x00748CF0);
     getUnkModelValue = (_getUnkModelValue)(0x00877C20);
-    loadFunc = (_loadFunc)(0x007B9D20);
     deleteGameObject = (_deleteGameObject)(0x00648600);
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused

@@ -6,17 +6,22 @@
 #include "logs.h"
 
 bool showGameObjectsList = false;
+float npcsAlpha = 1.0f;
 
 void RenderGameObjectsList()
 {
     ImGui::Begin("Game objects list");
 
-    uintptr_t triggerManagerAddr = GetPointerAddress(baseAddress + 0x00C48AEC /* Level container */, { 0x120 });
+    ImGui::SliderFloat("Game objects opacity", &npcsAlpha, 0.0, 1.0, "%.1f");
+
+    uintptr_t levelContainer = baseAddress + 0x00C48AEC;
+    uintptr_t triggerManagerAddr = GetPointerAddress(levelContainer, { 0x120 });
     uintptr_t triggerManager = *(uintptr_t*)triggerManagerAddr;
 
     if (triggerManager)
     {
-        uintptr_t gameObjectsList = (triggerManager + 0x434);
+        int gameObjectsListOffset = 0x434;
+        uintptr_t gameObjectsList = (triggerManager + gameObjectsListOffset);
         int gameObjectsCount = 0;
 
         for (int i = 0; i < 32; i++) // Game internally use 128 to loop so we can up this loop if needed
@@ -26,6 +31,8 @@ void RenderGameObjectsList()
             if (gameObjectAddress != 0)
             {
                 GameObject* gameObject = (GameObject*)gameObjectAddress;
+
+                gameObject->unkChildClass->alpha = npcsAlpha;
 
                 ImGui::PushID(i);
                 std::string objectAddressStr = std::format("{:x}: {:s}", gameObjectAddress, (char*)gameObject->model);
