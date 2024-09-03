@@ -31,7 +31,7 @@ _loadFunc loadFunc;
 _deleteGameObject deleteGameObject;
 
 int studsToGive = 0;
-//float localPlayerAlpha = 1.0;
+float localPlayerAlpha = 1.0;
 bool maxHealth = false;
 
 bool showCheats = false;
@@ -55,7 +55,6 @@ void LoadAddresses()
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 
-    //alphaAddress = GetPointerAddress(baseAddress + 0x00C53930, { 0x130, 0xAE0 });
     harryGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
 
     Logs::Push("Addresses loaded !\n");
@@ -65,19 +64,19 @@ void GameLoop()
 {
     *(int*)gameFocusPtr = 1; // Force game to render even when not focused
 
-    if (maxHealth)
-    {
-        uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
 
-        if (harryGameObjectAddress)
+    if (harryGameObjectAddress)
+    {
+        GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
+
+        if (maxHealth)
         {
-            GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
             harryGameObject->health = harryGameObject->maxHealth;
         }
-    }
 
-    // Alpha address if dynamic, re-add it later once we found a way to get the parent
-    //*(float*)alphaAddress = localPlayerAlpha;
+        harryGameObject->unkChildClass->alpha = localPlayerAlpha;
+    }
 }
 
 void MainThread(HMODULE hModule)
@@ -116,6 +115,9 @@ void RenderCheats()
 
     // Max health
     ImGui::Checkbox("Max health", &maxHealth);
+
+    // Alpha
+    ImGui::SliderFloat("Player opacity", &localPlayerAlpha, 0.0, 1.0, "%.1f");
 
     ImGui::End();
 }

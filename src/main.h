@@ -15,6 +15,14 @@ typedef int(__fastcall* _deleteGameObject)(int triggerManager, uintptr_t unk, ui
 extern _setPlayerModelIndex setPlayerModelIndex;
 extern _getUnkModelValue getUnkModelValue;
 
+class UnkChildClass
+{
+public:
+    char pad_0000[2784]; //0x0000
+    float alpha; //0x0AE0
+    char pad_0AE4[1372]; //0x0AE4
+};
+
 class GameObject
 {
 public:
@@ -26,7 +34,9 @@ public:
     float X; //0x0024
     float Z; //0x0028
     float Y; //0x002C
-    char pad_0030[3804]; //0x0030
+    char pad_0030[256]; //0x0030
+    UnkChildClass* unkChildClass; //0x0130
+    char pad_0134[3544]; //0x0134
     int32_t health; //0x0F0C
     int32_t maxHealth; //0x0F10
     char pad_0F14[1392]; //0x0F14
