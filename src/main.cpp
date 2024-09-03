@@ -30,8 +30,8 @@ _getUnkModelValue getUnkModelValue;
 _loadFunc loadFunc;
 _deleteGameObject deleteGameObject;
 
-int moneyToGive = 0;
-float localPlayerAlpha = 1.0;
+int studsToGive = 0;
+//float localPlayerAlpha = 1.0;
 bool maxHealth = false;
 
 bool showCheats = false;
@@ -106,12 +106,12 @@ void RenderCheats()
     ImGui::Begin("Cheats");
 
     // Give studs
-    ImGui::InputInt("Amount", &moneyToGive, 100, 1000);
+    ImGui::InputInt("Amount", &studsToGive, 100, 1000);
 
     if (ImGui::Button("Give studs"))
     {
-        *(int*)studsAddress += moneyToGive;
-        Logs::Push("%d studs added !\n", moneyToGive);
+        *(int*)studsAddress += studsToGive;
+        Logs::Push("%d studs added !\n", studsToGive);
     }
 
     // Max health

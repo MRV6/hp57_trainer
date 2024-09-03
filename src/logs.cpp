@@ -3,7 +3,7 @@
 #include <iostream>
 
 ImGuiTextBuffer Buf;
-bool AutoScroll; // Keep scrolling if already at the bottom.
+bool autoScroll = true; // Keep scrolling if already at the bottom.
 
 bool Logs::Visible = true;
 
@@ -32,7 +32,7 @@ void Logs::Draw()
     // Options menu
     if (ImGui::BeginPopup("Options"))
     {
-        ImGui::Checkbox("Auto-scroll", &AutoScroll);
+        ImGui::Checkbox("Auto-scroll", &autoScroll);
         ImGui::EndPopup();
     }
 
@@ -57,7 +57,7 @@ void Logs::Draw()
         ImGui::TextUnformatted(Buf.begin());
         ImGui::PopStyleVar();
 
-        if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+        if (autoScroll && ImGui::GetScrollY() < ImGui::GetScrollMaxY())
         {
             ImGui::SetScrollHereY(1.0f);
         }
