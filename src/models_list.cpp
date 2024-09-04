@@ -37,8 +37,8 @@ void RenderModelsList()
 
     uintptr_t world = *(uintptr_t*)modelsClassAddress;
     uintptr_t modelsList = *(uintptr_t*)(world + 0x64);
-    int maxModelId = *(int*)(world + 0x30);
 
+    int maxModelId = *(int*)(world + 0x30);
     ImGui::Text("Max model index: %i", maxModelId);
 
     ImGui::InputText("Search", &modelListQuery);
@@ -46,12 +46,10 @@ void RenderModelsList()
 
     for (int i = 0; i < maxModelId; i++)
     {
-        uintptr_t modelAddress = *(uintptr_t*)(modelsList + 4 * i);
-        uintptr_t modelNameAddress = *(uintptr_t*)(modelAddress + 0x1C);
-        uintptr_t modelLabelAddress = *(uintptr_t*)(modelAddress + 0xC);
+        uintptr_t modelDataAddress = *(uintptr_t*)(modelsList + 4 * i);
+        CharacterData* model = (CharacterData*)(modelDataAddress);
 
-        char* modelLabel = (char*)modelLabelAddress;
-        char* modelName = (char*)modelNameAddress;
+        char* modelName = (char*)model->namePtr;
 
         std::string modelNameStr = std::string(modelName);
         std::string query = modelListQuery.c_str();
@@ -63,29 +61,39 @@ void RenderModelsList()
             continue;
         }
 
-
-        int unkModelValue = getUnkModelValue(*(uintptr_t*)modelsClassAddress, i, 0xE);
-        bool isLoaded = unkModelValue != 0;
+        int charDefGameData = getCharDefGameData(*(uintptr_t*)modelsClassAddress, i, 0xE);
+        bool isLoaded = charDefGameData != 0;
 
         if (onlyLoadedModels && !isLoaded)
         {
             continue;
         }
 
-        const char* displayLabel = (std::string(modelLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : modelLabel;
-        const char* loadedText = isLoaded ? "Loaded" : "Not loaded";
-
-        ImGui::Text("%x: %s (%s, %i, %s, %i)", modelAddress, modelName, displayLabel, i, loadedText, unkModelValue);
-
-        if (isLoaded)
+        if (ImGui::TreeNode(modelName))
         {
-            ImGui::SameLine();
-            ImGui::PushID(i);
-            if (ImGui::Button("Swap to"))
+            char* modelLabel = (char*)model->labelPtr;
+            const char* displayLabel = (std::string(modelLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : modelLabel;
+
+            ImGui::Text("Address: %x", model);
+            ImGui::Text("Label: %s", displayLabel);
+            ImGui::Text("Path: %s", (char*)model->pathPtr);
+            ImGui::Text("Index: %i", model->skinIndex);
+            ImGui::Text("Loaded: %s", isLoaded ? "Yes" : "No");
+            ImGui::Text("Char def file address: %x", model->charDefFile);
+
+            if (isLoaded)
             {
-                SetPlayerModelIndex(i, modelName);
+                ImGui::PushID(i);
+
+                if (ImGui::Button("Swap to"))
+                {
+                    SetPlayerModelIndex(i, modelName);
+                }
+
+                ImGui::PopID();
             }
-            ImGui::PopID();
+
+            ImGui::TreePop();
         }
     }
 

@@ -8,11 +8,11 @@ extern uintptr_t harryGameObjectPtr;
 extern uintptr_t modelsClassAddress;
 
 typedef int(__cdecl* _setPlayerModelIndex)(int gameObject, int modelIndex, int oldModelIndex, int unusedInt, bool forceSet, bool unkBool);
-typedef int(__thiscall* _getUnkModelValue)(uintptr_t worldClass, int modelIndex, int unk);
+typedef int(__thiscall* _getCharDefGameData)(uintptr_t worldClass, int modelIndex, int unk);
 typedef int(__fastcall* _deleteGameObject)(int triggerManager, uintptr_t unk, uintptr_t gameObjectAddress);
 
 extern _setPlayerModelIndex setPlayerModelIndex;
-extern _getUnkModelValue getUnkModelValue;
+extern _getCharDefGameData getCharDefGameData;
 
 class UnkChildClass
 {
@@ -53,4 +53,19 @@ public:
     float Z; //0x0074
     float Y; //0x0078
     char pad_007C[196]; //0x007C
+};
+
+class CharacterData
+{
+public:
+    char pad_0000[4]; //0x0000
+    int32_t skinIndex; //0x0004
+    char pad_0008[4]; //0x0008
+    void* labelPtr; //0x000C
+    char pad_0010[8]; //0x0010
+    void* pathPtr; //0x0018
+    void* namePtr; //0x001C
+    char pad_0020[48]; //0x0020
+    void* charDefFile; //0x0050
+    char pad_0054[2148]; //0x0054
 };
