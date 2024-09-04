@@ -43,6 +43,7 @@ void RenderGameObjectsList()
                     ImGui::Text("Y: %.3f", gameObject->Y);
                     ImGui::Text("Z: %.3f", gameObject->Z);
                     ImGui::Text("Child address: %x", gameObject->child);
+                    ImGui::Text("Health: %i", gameObject->health);
 
                     // Somehow this functions does not really delete the game object
                     // It just removes it from the game objects list but the entity is still physically here
@@ -50,7 +51,7 @@ void RenderGameObjectsList()
                     // Needs to figure that out
                     /*if (ImGui::Button("Delete"))
                     {
-                        deleteGameObject(unkClass, gameObjectAddress, gameObjectAddress);
+                        deleteGameObject(triggerManager, gameObjectAddress, true);
                     }*/
 
                     if (ImGui::Button("Teleport to"))

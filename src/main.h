@@ -9,10 +9,11 @@ extern uintptr_t modelsClassAddress;
 
 typedef int(__cdecl* _setPlayerModelIndex)(int gameObject, int modelIndex, int oldModelIndex, int unusedInt, bool forceSet, bool unkBool);
 typedef int(__thiscall* _getCharDefGameData)(uintptr_t worldClass, int modelIndex, int unk);
-typedef int(__fastcall* _deleteGameObject)(int triggerManager, uintptr_t unk, uintptr_t gameObjectAddress);
+typedef int(__thiscall* _deleteGameObject)(int triggerManager, uintptr_t gameObjectAddress, bool a3);
 
 extern _setPlayerModelIndex setPlayerModelIndex;
 extern _getCharDefGameData getCharDefGameData;
+extern _deleteGameObject deleteGameObject;
 
 class UnkChildClass
 {
@@ -26,7 +27,7 @@ class GameObject
 {
 public:
     char pad_0000[8]; //0x0000
-    uintptr_t* child; //0x0008
+    void* child; //0x0008
     char pad_000C[8]; //0x000C
     void* model; //0x0014
     char pad_0018[12]; //0x0018
@@ -37,12 +38,11 @@ public:
     UnkChildClass* unkChildClass; //0x0130
     char pad_0134[3516]; //0x0134
     int64_t modelIndex; //0x0EF0
-    char pad_0EF8[24]; //0x0EF8
-    int32_t health; //0x0F10
-    int32_t maxHealth; //0x0F14
-    char pad_0F18[148]; //0x0F18
-    void* charDefGameData; //0x0FAC
-    char pad_0FB0[1240]; //0x0FB0
+    char pad_0EF8[20]; //0x0EF8
+    int32_t health; //0x0F0C
+    char pad_0F10[168]; //0x0F10
+    void* charDefGameData; //0x0FB8
+    char pad_0FBC[1240]; //0x0FBC
 };
 
 class CharacterPhantomEntity

@@ -47,7 +47,7 @@ void LoadAddresses()
 
     setPlayerModelIndex = (_setPlayerModelIndex)(0x00748CF0);
     getCharDefGameData = (_getCharDefGameData)(0x00877C20);
-    deleteGameObject = (_deleteGameObject)(0x00648600);
+    deleteGameObject = (_deleteGameObject)(0x00654620);
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 
@@ -68,7 +68,7 @@ void GameLoop()
 
         if (maxHealth)
         {
-            harryGameObject->health = harryGameObject->maxHealth;
+            harryGameObject->health = 2056;
         }
 
         harryGameObject->unkChildClass->alpha = localPlayerAlpha;
@@ -101,8 +101,9 @@ void RenderCheats()
     ImGui::Begin("Cheats");
 
     // Give studs
-    ImGui::InputInt("Amount", &studsToGive, 100, 1000);
+    ImGui::InputInt("##amount", &studsToGive, 100, 1000);
 
+    ImGui::SameLine();
     if (ImGui::Button("Give studs"))
     {
         *(int*)studsAddress += studsToGive;
