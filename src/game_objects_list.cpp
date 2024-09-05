@@ -54,6 +54,18 @@ GameObject* GetPlayerGameObject()
     return nullptr;
 }
 
+static void SetGameObjectCoords(GameObject* gameObject, float x, float y, float z)
+{
+    // The game expects us to set the position on both of these classes
+    gameObject->X = x;
+    gameObject->Y = y;
+    gameObject->Z = z;
+
+    gameObject->phantomEntity->X = x;
+    gameObject->phantomEntity->Y = y;
+    gameObject->phantomEntity->Z = z;
+}
+
 static void TeleportToGameObject(GameObject* gameObject)
 {
     auto playerGameObject = GetPlayerGameObject();
@@ -61,15 +73,7 @@ static void TeleportToGameObject(GameObject* gameObject)
     if (playerGameObject)
     {
         float z = gameObject->Z + 0.5;
-
-        // The game expects us to set the position on both of these classes
-        playerGameObject->X = gameObject->X;
-        playerGameObject->Y = gameObject->Y;
-        playerGameObject->Z = z;
-
-        playerGameObject->phantomEntity->X = gameObject->X;
-        playerGameObject->phantomEntity->Y = gameObject->Y;
-        playerGameObject->phantomEntity->Z = z;
+        SetGameObjectCoords(playerGameObject, gameObject->X, gameObject->Y, z);
 
         Logs::Push("Teleported to %x\n", gameObject);
     }
@@ -82,15 +86,7 @@ static void BringGameObject(GameObject* gameObject)
     if (playerGameObject)
     {
         float z = playerGameObject->Z + 0.5;
-
-        // The game expects us to set the position on both of these classes
-        gameObject->X = playerGameObject->X;
-        gameObject->Y = playerGameObject->Y;
-        gameObject->Z = z;
-
-        gameObject->phantomEntity->X = playerGameObject->X;
-        gameObject->phantomEntity->Y = playerGameObject->Y;
-        gameObject->phantomEntity->Z = z;
+        SetGameObjectCoords(gameObject, playerGameObject->X, playerGameObject->Y, z);
 
         Logs::Push("Brought %x\n", gameObject);
     }
