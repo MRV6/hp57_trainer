@@ -20,7 +20,6 @@ uintptr_t baseAddress;
 uintptr_t studsAddress;
 uintptr_t modelsClassAddress;
 uintptr_t gameFocusPtr;
-//uintptr_t alphaAddress;
 uintptr_t playerGameObjectPtr;
 
 _setPlayerModelIndex setPlayerModelIndex;
@@ -37,7 +36,7 @@ bool showLocalPlayerInfos = false;
 // TODO: Check if pointers are valid before trying to read them to fix crashes
 // TODO: Make all of this in separate files using an event manager (HP57::OnTick, HP57::OnLoad, HP57::OnStop ...)
 
-void LoadAddresses()
+static void LoadAddresses()
 {
     baseAddress = (uintptr_t)GetModuleHandle(NULL);
 
@@ -60,6 +59,7 @@ void GameLoop()
 {
     *(int*)gameFocusPtr = 1; // Force game to render even when not focused
 
+    // Player
     auto playerGameObject = GetPlayerGameObject();
 
     if (playerGameObject)
@@ -71,27 +71,15 @@ void GameLoop()
 
         playerGameObject->unkChildClass->alpha = localPlayerAlpha;
     }
-}
 
-void MainThread(HMODULE hModule)
-{
-#if ENABLE_CONSOLE
-    FILE* f;
-    AllocConsole();
-    freopen_s(&f, "CONOUT$", "w", stdout);
-#endif
+    // Game objects
+    auto allGameObjects = GetAllGameObjects();
 
-    LoadAddresses();
-
-    InitImgui();
-
-#if ENABLE_CONSOLE
-    if (f != 0) fclose(f);
-    FreeConsole();
-#endif
-
-    MessageBeep(MB_OK);
-    FreeLibraryAndExitThread(hModule, 0);
+    for (int i = 0; i < allGameObjects.size(); i++)
+    {
+        auto gameObject = allGameObjects[i];
+        gameObject->unkChildClass->alpha = gameObjectsAlpha;
+    }
 }
 
 void RenderCheats()
@@ -159,6 +147,26 @@ void RenderImGuiItems()
     if (Logs::Visible) Logs::Draw();
 }
 
+void MainThread(HMODULE hModule)
+{
+#if ENABLE_CONSOLE
+    FILE* f;
+    AllocConsole();
+    freopen_s(&f, "CONOUT$", "w", stdout);
+#endif
+
+    LoadAddresses();
+
+    InitImgui();
+
+#if ENABLE_CONSOLE
+    if (f != 0) fclose(f);
+    FreeConsole();
+#endif
+
+    MessageBeep(MB_OK);
+    FreeLibraryAndExitThread(hModule, 0);
+}
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {

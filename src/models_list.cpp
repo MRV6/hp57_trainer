@@ -12,7 +12,7 @@ bool onlyLoadedModels = false;
 
 std::string modelListQuery;
 
-void SetPlayerModelIndex(int index, const char* modelName)
+static void SetPlayerModelIndex(int index, const char* modelName)
 {
     uintptr_t harryGameObjectAddress = *(uintptr_t*)playerGameObjectPtr;
 

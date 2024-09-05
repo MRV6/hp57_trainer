@@ -6,7 +6,7 @@
 #include "logs.h"
 
 bool showGameObjectsList = false;
-float npcsAlpha = 1.0f;
+float gameObjectsAlpha = 1.0f;
 
 std::vector<GameObject*> GetAllGameObjects()
 {
@@ -66,7 +66,7 @@ static void SetGameObjectCoords(GameObject* gameObject, float x, float y, float 
     gameObject->phantomEntity->Z = z;
 }
 
-static void TeleportToGameObject(GameObject* gameObject)
+static void TeleportPlayerToGameObject(GameObject* gameObject)
 {
     auto playerGameObject = GetPlayerGameObject();
 
@@ -79,7 +79,7 @@ static void TeleportToGameObject(GameObject* gameObject)
     }
 }
 
-static void BringGameObject(GameObject* gameObject)
+static void BringGameObjectToPlayer(GameObject* gameObject)
 {
     auto playerGameObject = GetPlayerGameObject();
 
@@ -100,7 +100,7 @@ static void BringAllGameObjects()
     {
         auto gameObject = allGameObjects[i];
 
-        BringGameObject(gameObject);
+        BringGameObjectToPlayer(gameObject);
     }
 }
 
@@ -108,7 +108,7 @@ void RenderGameObjectsList()
 {
     ImGui::Begin("Game objects list");
 
-    ImGui::SliderFloat("Game objects opacity", &npcsAlpha, 0.0, 1.0, "%.1f");
+    ImGui::SliderFloat("Opacity", &gameObjectsAlpha, 0.0, 1.0, "%.1f");
 
     if (ImGui::Button("Bring all"))
     {
@@ -124,8 +124,6 @@ void RenderGameObjectsList()
     {
         auto gameObject = allGameObjects[i];
 
-        gameObject->unkChildClass->alpha = npcsAlpha;
-
         ImGui::PushID(i);
 
         std::string objectAddressStr = std::format("{:x}: {:s}", reinterpret_cast<uintptr_t>(gameObject), (char*)gameObject->model);
@@ -135,8 +133,11 @@ void RenderGameObjectsList()
             ImGui::Text("X: %.3f", gameObject->X);
             ImGui::Text("Y: %.3f", gameObject->Y);
             ImGui::Text("Z: %.3f", gameObject->Z);
-            ImGui::Text("Child address: %x", gameObject->child);
             ImGui::Text("Health: %i", gameObject->health);
+            ImGui::Text("Child: %x", gameObject->child);
+            ImGui::Text("Unk child class: %x", gameObject->unkChildClass);
+            ImGui::Text("Phantom entity: %x", gameObject->phantomEntity);
+            ImGui::Text("Brain: %x", gameObject->brain);
 
             // Somehow this functions does not really delete the game object
             // It just removes it from the game objects list but the entity is still physically here
@@ -149,12 +150,12 @@ void RenderGameObjectsList()
 
             if (ImGui::Button("Teleport to"))
             {
-                TeleportToGameObject(gameObject);
+                TeleportPlayerToGameObject(gameObject);
             }
 
             if (ImGui::Button("Bring to me"))
             {
-                BringGameObject(gameObject);
+                BringGameObjectToPlayer(gameObject);
             }
 
             ImGui::TreePop();
