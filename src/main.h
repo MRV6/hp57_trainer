@@ -4,7 +4,7 @@ void GameLoop();
 void RenderImGuiItems();
 
 extern uintptr_t baseAddress;
-extern uintptr_t harryGameObjectPtr;
+extern uintptr_t playerGameObjectPtr;
 extern uintptr_t modelsClassAddress;
 
 typedef int(__cdecl* _setPlayerModelIndex)(int gameObject, int modelIndex, int oldModelIndex, int unusedInt, bool forceSet, bool unkBool);
@@ -23,6 +23,16 @@ public:
     char pad_0AE4[1372]; //0x0AE4
 };
 
+class CharacterPhantomEntity
+{
+public:
+    char pad_0000[112]; //0x0000
+    float X; //0x0070
+    float Z; //0x0074
+    float Y; //0x0078
+    char pad_007C[196]; //0x007C
+};
+
 class GameObject
 {
 public:
@@ -34,25 +44,17 @@ public:
     float X; //0x0024
     float Z; //0x0028
     float Y; //0x002C
-    char pad_0030[256]; //0x0030
+    char pad_0030[248]; //0x0030
+    void* brain; //0x0128
+    CharacterPhantomEntity* phantomEntity; //0x012C
     UnkChildClass* unkChildClass; //0x0130
     char pad_0134[3516]; //0x0134
     int64_t modelIndex; //0x0EF0
     char pad_0EF8[20]; //0x0EF8
     int32_t health; //0x0F0C
-    char pad_0F10[168]; //0x0F10
+    char pad_0F14[164]; //0x0F14
     void* charDefGameData; //0x0FB8
     char pad_0FBC[1240]; //0x0FBC
-};
-
-class CharacterPhantomEntity
-{
-public:
-    char pad_0000[112]; //0x0000
-    float X; //0x0070
-    float Z; //0x0074
-    float Y; //0x0078
-    char pad_007C[196]; //0x007C
 };
 
 class CharacterData

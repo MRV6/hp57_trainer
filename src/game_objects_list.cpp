@@ -8,11 +8,9 @@
 bool showGameObjectsList = false;
 float npcsAlpha = 1.0f;
 
-void RenderGameObjectsList()
+std::vector<GameObject*> GetAllGameObjects()
 {
-    ImGui::Begin("Game objects list");
-
-    ImGui::SliderFloat("Game objects opacity", &npcsAlpha, 0.0, 1.0, "%.1f");
+    std::vector<GameObject*> allGameObjects;
 
     uintptr_t levelContainer = baseAddress + 0x00C48AEC;
     uintptr_t triggerManagerAddr = GetPointerAddress(levelContainer, { 0x120 });
@@ -22,7 +20,6 @@ void RenderGameObjectsList()
     {
         int gameObjectsListOffset = 0x434;
         uintptr_t gameObjectsList = (triggerManager + gameObjectsListOffset);
-        int gameObjectsCount = 0;
 
         for (int i = 0; i < 32; i++) // Game internally use 128 to loop so we can up this loop if needed
         {
@@ -32,66 +29,142 @@ void RenderGameObjectsList()
             {
                 GameObject* gameObject = (GameObject*)gameObjectAddress;
 
-                gameObject->unkChildClass->alpha = npcsAlpha;
-
-                ImGui::PushID(i);
-                std::string objectAddressStr = std::format("{:x}: {:s}", gameObjectAddress, (char*)gameObject->model);
-
-                if (ImGui::TreeNode(objectAddressStr.c_str()))
-                {
-                    ImGui::Text("X: %.3f", gameObject->X);
-                    ImGui::Text("Y: %.3f", gameObject->Y);
-                    ImGui::Text("Z: %.3f", gameObject->Z);
-                    ImGui::Text("Child address: %x", gameObject->child);
-                    ImGui::Text("Health: %i", gameObject->health);
-
-                    // Somehow this functions does not really delete the game object
-                    // It just removes it from the game objects list but the entity is still physically here
-                    // However, if we interact with the entity (collision) it will re-appear on the list
-                    // Needs to figure that out
-                    /*if (ImGui::Button("Delete"))
-                    {
-                        deleteGameObject(triggerManager, gameObjectAddress, true);
-                    }*/
-
-                    if (ImGui::Button("Teleport to"))
-                    {
-                        uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
-
-                        if (harryGameObjectAddress)
-                        {
-                            GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
-
-                            uintptr_t characterPhantomEntity = GetPointerAddress(baseAddress + 0x00C58348, { 0 });
-                            CharacterPhantomEntity* charPhantomEntity = (CharacterPhantomEntity*)characterPhantomEntity;
-
-                            if (harryGameObject && charPhantomEntity)
-                            {
-                                float z = gameObject->Z + 0.5;
-
-                                // The game expects us to set the position on both of these classes
-                                harryGameObject->X = gameObject->X;
-                                harryGameObject->Y = gameObject->Y;
-                                harryGameObject->Z = z;
-
-                                charPhantomEntity->X = gameObject->X;
-                                charPhantomEntity->Y = gameObject->Y;
-                                charPhantomEntity->Z = z;
-
-                                Logs::Push("Teleported to %x\n", gameObjectAddress);
-                            }
-                        }
-                    }
-
-                    ImGui::TreePop();
-                }
-
-                ImGui::PopID();
-                gameObjectsCount++;
+                allGameObjects.push_back(gameObject);
             }
         }
+    }
 
-        ImGui::Text("Game objects count: %d", gameObjectsCount);
+    return allGameObjects;
+}
+
+GameObject* GetPlayerGameObject()
+{
+    uintptr_t playerGameObjectAddress = *(uintptr_t*)playerGameObjectPtr;
+
+    if (playerGameObjectAddress)
+    {
+        GameObject* playerGameObject = (GameObject*)playerGameObjectAddress;
+
+        if (playerGameObject)
+        {
+            return playerGameObject;
+        }
+    }
+
+    return nullptr;
+}
+
+static void TeleportToGameObject(GameObject* gameObject)
+{
+    auto playerGameObject = GetPlayerGameObject();
+
+    if (playerGameObject)
+    {
+        float z = gameObject->Z + 0.5;
+
+        // The game expects us to set the position on both of these classes
+        playerGameObject->X = gameObject->X;
+        playerGameObject->Y = gameObject->Y;
+        playerGameObject->Z = z;
+
+        playerGameObject->phantomEntity->X = gameObject->X;
+        playerGameObject->phantomEntity->Y = gameObject->Y;
+        playerGameObject->phantomEntity->Z = z;
+
+        Logs::Push("Teleported to %x\n", gameObject);
+    }
+}
+
+static void BringGameObject(GameObject* gameObject)
+{
+    auto playerGameObject = GetPlayerGameObject();
+
+    if (playerGameObject)
+    {
+        float z = playerGameObject->Z + 0.5;
+
+        // The game expects us to set the position on both of these classes
+        gameObject->X = playerGameObject->X;
+        gameObject->Y = playerGameObject->Y;
+        gameObject->Z = z;
+
+        gameObject->phantomEntity->X = playerGameObject->X;
+        gameObject->phantomEntity->Y = playerGameObject->Y;
+        gameObject->phantomEntity->Z = z;
+
+        Logs::Push("Brought %x\n", gameObject);
+    }
+}
+
+static void BringAllGameObjects()
+{
+    auto allGameObjects = GetAllGameObjects();
+
+    for (int i = 0; i < allGameObjects.size(); i++)
+    {
+        auto gameObject = allGameObjects[i];
+
+        BringGameObject(gameObject);
+    }
+}
+
+void RenderGameObjectsList()
+{
+    ImGui::Begin("Game objects list");
+
+    ImGui::SliderFloat("Game objects opacity", &npcsAlpha, 0.0, 1.0, "%.1f");
+
+    if (ImGui::Button("Bring all"))
+    {
+        BringAllGameObjects();
+    }
+
+    auto allGameObjects = GetAllGameObjects();
+
+    int gameObjectsCount = allGameObjects.size();
+    ImGui::Text("Game objects count: %i", gameObjectsCount);
+
+    for (int i = 0; i < gameObjectsCount; i++)
+    {
+        auto gameObject = allGameObjects[i];
+
+        gameObject->unkChildClass->alpha = npcsAlpha;
+
+        ImGui::PushID(i);
+
+        std::string objectAddressStr = std::format("{:x}: {:s}", reinterpret_cast<uintptr_t>(gameObject), (char*)gameObject->model);
+
+        if (ImGui::TreeNode(objectAddressStr.c_str()))
+        {
+            ImGui::Text("X: %.3f", gameObject->X);
+            ImGui::Text("Y: %.3f", gameObject->Y);
+            ImGui::Text("Z: %.3f", gameObject->Z);
+            ImGui::Text("Child address: %x", gameObject->child);
+            ImGui::Text("Health: %i", gameObject->health);
+
+            // Somehow this functions does not really delete the game object
+            // It just removes it from the game objects list but the entity is still physically here
+            // However, if we interact with the entity (collision) it will re-appear on the list
+            // Needs to figure that out
+            /*if (ImGui::Button("Delete"))
+            {
+                deleteGameObject(triggerManager, gameObjectAddress, true);
+            }*/
+
+            if (ImGui::Button("Teleport to"))
+            {
+                TeleportToGameObject(gameObject);
+            }
+
+            if (ImGui::Button("Bring to me"))
+            {
+                BringGameObject(gameObject);
+            }
+
+            ImGui::TreePop();
+        }
+
+        ImGui::PopID();
     }
 
     ImGui::End();

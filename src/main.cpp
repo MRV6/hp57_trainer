@@ -21,7 +21,7 @@ uintptr_t studsAddress;
 uintptr_t modelsClassAddress;
 uintptr_t gameFocusPtr;
 //uintptr_t alphaAddress;
-uintptr_t harryGameObjectPtr;
+uintptr_t playerGameObjectPtr;
 
 _setPlayerModelIndex setPlayerModelIndex;
 _getCharDefGameData getCharDefGameData;
@@ -29,7 +29,7 @@ _deleteGameObject deleteGameObject;
 
 int studsToGive = 0;
 float localPlayerAlpha = 1.0;
-bool maxHealth = false;
+bool infiniteHealth = false;
 
 bool showCheats = false;
 bool showLocalPlayerInfos = false;
@@ -51,7 +51,7 @@ void LoadAddresses()
 
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
 
-    harryGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
+    playerGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
 
     Logs::Push("Addresses loaded !\n");
 }
@@ -60,18 +60,16 @@ void GameLoop()
 {
     *(int*)gameFocusPtr = 1; // Force game to render even when not focused
 
-    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+    auto playerGameObject = GetPlayerGameObject();
 
-    if (harryGameObjectAddress)
+    if (playerGameObject)
     {
-        GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
-
-        if (maxHealth)
+        if (infiniteHealth)
         {
-            harryGameObject->health = 2056;
+            playerGameObject->health = 2056;
         }
 
-        harryGameObject->unkChildClass->alpha = localPlayerAlpha;
+        playerGameObject->unkChildClass->alpha = localPlayerAlpha;
     }
 }
 
@@ -110,8 +108,8 @@ void RenderCheats()
         Logs::Push("%d studs added !\n", studsToGive);
     }
 
-    // Max health
-    ImGui::Checkbox("Max health", &maxHealth);
+    // Infinite health
+    ImGui::Checkbox("Infinite health", &infiniteHealth);
 
     // Alpha
     ImGui::SliderFloat("Player opacity", &localPlayerAlpha, 0.0, 1.0, "%.1f");
@@ -123,17 +121,15 @@ void RenderLocalPlayerInfos()
 {
     ImGui::Begin("Local player infos");
 
-    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+    auto playerGameObject = GetPlayerGameObject();
 
-    if (harryGameObjectAddress)
+    if (playerGameObject)
     {
-        GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
-
-        ImGui::Text("Game object address : %x", harryGameObjectAddress);
-        ImGui::Text("X: %.3f", harryGameObject->X);
-        ImGui::Text("Y: %.3f", harryGameObject->Y);
-        ImGui::Text("Z: %.3f", harryGameObject->Z);
-        ImGui::Text("Character model: %s", (char*)(harryGameObject->model));
+        ImGui::Text("Game object address : %x", playerGameObject);
+        ImGui::Text("X: %.3f", playerGameObject->X);
+        ImGui::Text("Y: %.3f", playerGameObject->Y);
+        ImGui::Text("Z: %.3f", playerGameObject->Z);
+        ImGui::Text("Character model: %s", (char*)(playerGameObject->model));
     }
 
     ImGui::End();

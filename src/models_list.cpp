@@ -14,7 +14,7 @@ std::string modelListQuery;
 
 void SetPlayerModelIndex(int index, const char* modelName)
 {
-    uintptr_t harryGameObjectAddress = *(uintptr_t*)harryGameObjectPtr;
+    uintptr_t harryGameObjectAddress = *(uintptr_t*)playerGameObjectPtr;
 
     if (harryGameObjectAddress)
     {
