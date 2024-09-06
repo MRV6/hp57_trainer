@@ -59,6 +59,7 @@ bool InitImgui()
         return 1;
     }
 
+    ::ShowWindow(hwnd, SW_HIDE);
     ::SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 0, ULW_COLORKEY);
 
     gameWindow = FindWindow(0, L"LEGO® Harry Potter™ 2");
@@ -93,6 +94,11 @@ bool InitImgui()
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
+        }
+
+        if ((GetForegroundWindow() != hwnd) && isMenuVisible)
+        {
+            ToggleMenu();
         }
 
         GameLoop();

@@ -21,10 +21,12 @@ uintptr_t studsAddress;
 uintptr_t modelsClassAddress;
 uintptr_t gameFocusPtr;
 uintptr_t playerGameObjectPtr;
+uintptr_t harryGameAddress;
 
 _setPlayerModelIndex setPlayerModelIndex;
 _getCharDefGameData getCharDefGameData;
 _deleteGameObject deleteGameObject;
+_loadModelByIndex loadModelByIndex;
 
 int studsToGive = 0;
 float localPlayerAlpha = 1.0;
@@ -40,17 +42,16 @@ static void LoadAddresses()
 {
     baseAddress = (uintptr_t)GetModuleHandle(NULL);
 
-    studsAddress = GetPointerAddress(baseAddress + 0x00C5B600, { 0 });
-
     modelsClassAddress = 0x00F06ED0;
+    studsAddress = GetPointerAddress(baseAddress + 0x00C5B600, { 0 });
+    gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
+    playerGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
+    harryGameAddress = GetPointerAddress(baseAddress + 0x00956834, { 4, 0 });
 
     setPlayerModelIndex = (_setPlayerModelIndex)(0x00748CF0);
     getCharDefGameData = (_getCharDefGameData)(0x00877C20);
     deleteGameObject = (_deleteGameObject)(0x00654620);
-
-    gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
-
-    playerGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
+    loadModelByIndex = (_loadModelByIndex)(0x00483050);
 
     Logs::Push("Addresses loaded !\n");
 }
@@ -73,13 +74,13 @@ void GameLoop()
     }
 
     // Game objects
-    auto allGameObjects = GetAllGameObjects();
+    /*auto allGameObjects = GetAllGameObjects();
 
     for (int i = 0; i < allGameObjects.size(); i++)
     {
         auto gameObject = allGameObjects[i];
         gameObject->unkChildClass->alpha = gameObjectsAlpha;
-    }
+    }*/
 }
 
 void RenderCheats()

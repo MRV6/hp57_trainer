@@ -6,14 +6,17 @@ void RenderImGuiItems();
 extern uintptr_t baseAddress;
 extern uintptr_t playerGameObjectPtr;
 extern uintptr_t modelsClassAddress;
+extern uintptr_t harryGameAddress;
 
 typedef int(__cdecl* _setPlayerModelIndex)(int gameObject, int modelIndex, int oldModelIndex, int unusedInt, bool forceSet, bool unkBool);
 typedef int(__thiscall* _getCharDefGameData)(uintptr_t worldClass, int modelIndex, int unk);
 typedef int(__thiscall* _deleteGameObject)(int triggerManager, uintptr_t gameObjectAddress, bool a3);
+typedef int(__thiscall* _loadModelByIndex)(int harryGame, int modelIndex, int anotherModelIndex);
 
 extern _setPlayerModelIndex setPlayerModelIndex;
 extern _getCharDefGameData getCharDefGameData;
 extern _deleteGameObject deleteGameObject;
+extern _loadModelByIndex loadModelByIndex;
 
 class UnkChildClass
 {
@@ -68,6 +71,6 @@ public:
     void* pathPtr; //0x0018
     void* namePtr; //0x001C
     char pad_0020[48]; //0x0020
-    void* charDefFile; //0x0050
+    uintptr_t charDefFile; //0x0050
     char pad_0054[2148]; //0x0054
 };

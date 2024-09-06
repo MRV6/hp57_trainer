@@ -35,10 +35,10 @@ void RenderModelsList()
 {
     ImGui::Begin("Models list");
 
-    uintptr_t world = *(uintptr_t*)modelsClassAddress;
-    uintptr_t modelsList = *(uintptr_t*)(world + 0x64);
+    uintptr_t modelsClass = *(uintptr_t*)modelsClassAddress;
+    uintptr_t modelsList = *(uintptr_t*)(modelsClass + 0x64);
 
-    int maxModelId = *(int*)(world + 0x30);
+    int maxModelId = *(int*)(modelsClass + 0x30);
     ImGui::Text("Max model index: %i", maxModelId);
 
     ImGui::InputText("Search", &modelListQuery);
@@ -61,7 +61,7 @@ void RenderModelsList()
             continue;
         }
 
-        int charDefGameData = getCharDefGameData(*(uintptr_t*)modelsClassAddress, i, 0xE);
+        int charDefGameData = getCharDefGameData(modelsClass, i, 0xE);
         bool isLoaded = charDefGameData != 0;
 
         if (onlyLoadedModels && !isLoaded)
@@ -81,17 +81,22 @@ void RenderModelsList()
             ImGui::Text("Loaded: %s", isLoaded ? "Yes" : "No");
             ImGui::Text("Char def file address: %x", model->charDefFile);
 
+            ImGui::PushID(i);
+
             if (isLoaded)
             {
-                ImGui::PushID(i);
-
                 if (ImGui::Button("Swap to"))
                 {
                     SetPlayerModelIndex(i, modelName);
                 }
-
-                ImGui::PopID();
             }
+
+            if (ImGui::Button("Load model"))
+            {
+                loadModelByIndex(harryGameAddress, i, 735);
+            }
+
+            ImGui::PopID();
 
             ImGui::TreePop();
         }

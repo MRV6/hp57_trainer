@@ -14,22 +14,26 @@ std::vector<GameObject*> GetAllGameObjects()
 
     uintptr_t levelContainer = baseAddress + 0x00C48AEC;
     uintptr_t triggerManagerAddr = GetPointerAddress(levelContainer, { 0x120 });
-    uintptr_t triggerManager = *(uintptr_t*)triggerManagerAddr;
 
-    if (triggerManager)
+    if (triggerManagerAddr != 0)
     {
-        int gameObjectsListOffset = 0x434;
-        uintptr_t gameObjectsList = (triggerManager + gameObjectsListOffset);
+        uintptr_t triggerManager = *(uintptr_t*)triggerManagerAddr;
 
-        for (int i = 0; i < 32; i++) // Game internally use 128 to loop so we can up this loop if needed
+        if (triggerManager != 0)
         {
-            uintptr_t gameObjectAddress = *(uintptr_t*)(gameObjectsList + 4 * i);
+            int gameObjectsListOffset = 0x434;
+            uintptr_t gameObjectsList = (triggerManager + gameObjectsListOffset);
 
-            if (gameObjectAddress != 0)
+            for (int i = 0; i < 32; i++) // Game internally use 128 to loop so we can up this loop if needed
             {
-                GameObject* gameObject = (GameObject*)gameObjectAddress;
+                uintptr_t gameObjectAddress = *(uintptr_t*)(gameObjectsList + 4 * i);
 
-                allGameObjects.push_back(gameObject);
+                if (gameObjectAddress != 0)
+                {
+                    GameObject* gameObject = (GameObject*)gameObjectAddress;
+
+                    allGameObjects.push_back(gameObject);
+                }
             }
         }
     }
