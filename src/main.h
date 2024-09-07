@@ -9,7 +9,7 @@ extern uintptr_t modelsClassAddress;
 extern uintptr_t harryGameAddress;
 
 typedef int(__cdecl* _setPlayerModelIndex)(int gameObject, int modelIndex, int oldModelIndex, int unusedInt, bool forceSet, bool unkBool);
-typedef int(__thiscall* _getCharDefGameData)(uintptr_t worldClass, int modelIndex, int unk);
+typedef int(__thiscall* _getCharDefGameData)(uintptr_t modelsClass, int modelIndex, int unk);
 typedef int(__thiscall* _deleteGameObject)(int triggerManager, uintptr_t gameObjectAddress, bool a3);
 typedef int(__thiscall* _loadModelByIndex)(int harryGame, int modelIndex, int anotherModelIndex);
 

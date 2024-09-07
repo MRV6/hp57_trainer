@@ -8,8 +8,6 @@
 #include "logs.h"
 
 bool showModelsList = false;
-bool onlyLoadedModels = false;
-
 std::string modelListQuery;
 
 static void SetPlayerModelIndex(int index, const char* modelName)
@@ -31,6 +29,13 @@ static void SetPlayerModelIndex(int index, const char* modelName)
     }
 }
 
+static bool IsModelLoaded(int modelIndex)
+{
+    uintptr_t modelsClass = *(uintptr_t*)modelsClassAddress;
+    int charDefGameData = getCharDefGameData(modelsClass, modelIndex, 0xE);
+    return charDefGameData != 0;
+}
+
 void RenderModelsList()
 {
     ImGui::Begin("Models list");
@@ -42,7 +47,6 @@ void RenderModelsList()
     ImGui::Text("Max model index: %i", maxModelId);
 
     ImGui::InputText("Search", &modelListQuery);
-    ImGui::Checkbox("Show only loaded models", &onlyLoadedModels);
 
     for (int i = 0; i < maxModelId; i++)
     {
@@ -61,18 +65,15 @@ void RenderModelsList()
             continue;
         }
 
-        int charDefGameData = getCharDefGameData(modelsClass, i, 0xE);
-        bool isLoaded = charDefGameData != 0;
+        bool isLoaded = IsModelLoaded(i);
 
-        if (onlyLoadedModels && !isLoaded)
-        {
-            continue;
-        }
+        ImGui::PushID(i);
 
         if (ImGui::TreeNode(modelName))
         {
             char* modelLabel = (char*)model->labelPtr;
             const char* displayLabel = (std::string(modelLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : modelLabel;
+
 
             ImGui::Text("Address: %x", model);
             ImGui::Text("Label: %s", displayLabel);
@@ -81,25 +82,25 @@ void RenderModelsList()
             ImGui::Text("Loaded: %s", isLoaded ? "Yes" : "No");
             ImGui::Text("Char def file address: %x", model->charDefFile);
 
-            ImGui::PushID(i);
-
-            if (isLoaded)
-            {
-                if (ImGui::Button("Swap to"))
-                {
-                    SetPlayerModelIndex(i, modelName);
-                }
-            }
-
-            if (ImGui::Button("Load model"))
-            {
-                loadModelByIndex(harryGameAddress, i, 735);
-            }
-
-            ImGui::PopID();
-
             ImGui::TreePop();
         }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Swap to"))
+        {
+            if (!isLoaded)
+            {
+                Logs::Push("Loading %s ...\n", modelName);
+                loadModelByIndex(harryGameAddress, i, 735);
+                while (!IsModelLoaded(i));
+                Logs::Push("Successfully loaded %s.\n", modelName);
+            }
+
+            SetPlayerModelIndex(i, modelName);
+        }
+
+        ImGui::PopID();
     }
 
     ImGui::End();
