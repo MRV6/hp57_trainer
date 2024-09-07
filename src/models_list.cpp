@@ -16,7 +16,8 @@ static void SetPlayerModelIndex(int index, const char* modelName)
 
     if (harryGameObjectAddress)
     {
-        int success = setPlayerModelIndex(harryGameObjectAddress, index, 550, 1, false, true);
+        GameObject* harryGameObject = (GameObject*)harryGameObjectAddress;
+        int success = setPlayerModelIndex(harryGameObjectAddress, index, harryGameObject->modelIndex, 1, false, false);
 
         if (success)
         {
