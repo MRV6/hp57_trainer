@@ -35,7 +35,6 @@ bool infiniteHealth = false;
 bool showCheats = false;
 bool showLocalPlayerInfos = false;
 
-// TODO: Check if pointers are valid before trying to read them to fix crashes
 // TODO: Make all of this in separate files using an event manager (HP57::OnTick, HP57::OnLoad, HP57::OnStop ...)
 
 static void LoadAddresses()
@@ -74,13 +73,13 @@ void GameLoop()
     }
 
     // Game objects
-    /*auto allGameObjects = GetAllGameObjects();
+    auto allGameObjects = GetAllGameObjects();
 
     for (int i = 0; i < allGameObjects.size(); i++)
     {
         auto gameObject = allGameObjects[i];
         gameObject->unkChildClass->alpha = gameObjectsAlpha;
-    }*/
+    }
 }
 
 void RenderCheats()
