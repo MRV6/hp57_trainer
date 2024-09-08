@@ -4,11 +4,14 @@
 #include <algorithm>
 #include <iostream>
 #include <format>
+#include <thread>
+
 #include "main.h"
 #include "logs.h"
 
 bool showModelsList = false;
 std::string modelListQuery;
+bool isSwappingModel = false;
 
 static void SetPlayerModelIndex(int index, const char* modelName)
 {
@@ -35,6 +38,47 @@ static bool IsModelLoaded(int modelIndex)
     uintptr_t modelsClass = *(uintptr_t*)modelsClassAddress;
     int charDefGameData = getCharDefGameData(modelsClass, modelIndex, 0xE);
     return charDefGameData != 0;
+}
+
+static void SwapToModel(bool isLoaded, int modelIndex, const char* modelName)
+{
+    bool failedLoadingModel = false;
+    if (!isLoaded)
+    {
+        const clock_t begin_time = clock();
+
+        Logs::Push("Loading %s ...\n", modelName);
+
+        // NOTE: Loading doesn't work in missions yet as the game is blocking this via a check in this function
+        // HarryGame + 0x214C = in freemode
+        // Need to patch this but atm idc
+        int success = loadModelByIndex(harryGameAddress, modelIndex, 735); // TODO: Use the old model index as third arg
+
+        while (!IsModelLoaded(modelIndex))
+        {
+            Logs::Push("Waiting for %s to load ...\n", modelName);
+
+            if (float(clock() - begin_time) > 3000.0)
+            {
+                Logs::Push("Failed loading %s.\n", modelName);
+                isSwappingModel = false;
+                failedLoadingModel = true;
+                break;
+            }
+        }
+
+        if (!failedLoadingModel)
+        {
+            Logs::Push("Successfully loaded %s.\n", modelName);
+        }
+    }
+
+    if (!failedLoadingModel)
+    {
+        SetPlayerModelIndex(modelIndex, modelName);
+    }
+
+    isSwappingModel = false;
 }
 
 void RenderModelsList()
@@ -75,7 +119,6 @@ void RenderModelsList()
             char* modelLabel = (char*)model->labelPtr;
             const char* displayLabel = (std::string(modelLabel).find("TEXT STRING ERROR") != std::string::npos) ? "NO LABEL" : modelLabel;
 
-
             ImGui::Text("Address: %x", model);
             ImGui::Text("Label: %s", displayLabel);
             ImGui::Text("Path: %s", (char*)model->pathPtr);
@@ -90,15 +133,12 @@ void RenderModelsList()
 
         if (ImGui::Button("Swap to"))
         {
-            if (!isLoaded)
+            if (!isSwappingModel)
             {
-                Logs::Push("Loading %s ...\n", modelName);
-                loadModelByIndex(harryGameAddress, i, 735);
-                while (!IsModelLoaded(i));
-                Logs::Push("Successfully loaded %s.\n", modelName);
+                isSwappingModel = true;
+                std::thread t1(SwapToModel, isLoaded, i, modelName);
+                t1.detach();
             }
-
-            SetPlayerModelIndex(i, modelName);
         }
 
         ImGui::PopID();

@@ -49,7 +49,7 @@ bool InitImgui()
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"HP57 Trainer", nullptr };
     ::RegisterClassExW(&wc);
-    hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"HP57 Trainer", WS_POPUP, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+    hwnd = ::CreateWindowExW(WS_EX_TOPMOST | WS_EX_LAYERED, wc.lpszClassName, L"HP57 Trainer", WS_OVERLAPPEDWINDOW, 100, 100, 1920, 1080, nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -94,11 +94,6 @@ bool InitImgui()
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
-        }
-
-        if ((GetForegroundWindow() != hwnd) && isMenuVisible)
-        {
-            ToggleMenu();
         }
 
         GameLoop();

@@ -22,6 +22,7 @@ uintptr_t modelsClassAddress;
 uintptr_t gameFocusPtr;
 uintptr_t playerGameObjectPtr;
 uintptr_t harryGameAddress;
+uintptr_t triggerManagerAddress;
 
 _setPlayerModelIndex setPlayerModelIndex;
 _getCharDefGameData getCharDefGameData;
@@ -46,6 +47,9 @@ static void LoadAddresses()
     gameFocusPtr = GetPointerAddress(baseAddress + 0x00189634, { 0 }); // A byte, 0 = game not focused, 1 = game focused
     playerGameObjectPtr = GetPointerAddress(baseAddress + 0x00003F18, { 0 });
     harryGameAddress = GetPointerAddress(baseAddress + 0x00956834, { 4, 0 });
+
+    uintptr_t levelContainer = baseAddress + 0x00C48AEC;
+    triggerManagerAddress = GetPointerAddress(levelContainer, { 0x120 });
 
     setPlayerModelIndex = (_setPlayerModelIndex)(0x00748CF0);
     getCharDefGameData = (_getCharDefGameData)(0x00877C20);

@@ -12,12 +12,9 @@ std::vector<GameObject*> GetAllGameObjects()
 {
     std::vector<GameObject*> allGameObjects;
 
-    uintptr_t levelContainer = baseAddress + 0x00C48AEC;
-    uintptr_t triggerManagerAddr = GetPointerAddress(levelContainer, { 0x120 });
-
-    if (triggerManagerAddr != 0)
+    if (triggerManagerAddress != 0)
     {
-        uintptr_t triggerManager = *(uintptr_t*)triggerManagerAddr;
+        uintptr_t triggerManager = *(uintptr_t*)triggerManagerAddress;
 
         if (triggerManager != 0)
         {
@@ -149,7 +146,7 @@ void RenderGameObjectsList()
             // Needs to figure that out
             /*if (ImGui::Button("Delete"))
             {
-                deleteGameObject(triggerManager, gameObjectAddress, true);
+                deleteGameObject(triggerManagerAddress, reinterpret_cast<uintptr_t>(gameObject), true);
             }*/
 
             if (ImGui::Button("Teleport to"))
